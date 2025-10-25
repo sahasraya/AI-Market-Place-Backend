@@ -109,13 +109,16 @@ async def create_tables():
                         productfundingstage VARCHAR(30) DEFAULT NULL,
                         productusecaseid VARCHAR(30) DEFAULT NULL,
                         productfacebook VARCHAR(300) DEFAULT NULL,
+                        productdocumentation VARCHAR(300) DEFAULT NULL,
                         productlinkedin VARCHAR(300) DEFAULT NULL,
                         productfounderid VARCHAR(30) DEFAULT NULL,
                         productdescription VARCHAR(300) DEFAULT NULL,
                         productbaseaimodelid VARCHAR(30) DEFAULT NULL,
                         productdeploymentid VARCHAR(30) DEFAULT NULL,
+                        productrepositoryid VARCHAR(30) DEFAULT NULL,
                         productmediaid VARCHAR(30) DEFAULT NULL, 
                         rating TINYINT DEFAULT 0,
+                        counts  VARCHAR(10) DEFAULT 0,
                         createddate DATETIME DEFAULT CURRENT_TIMESTAMP,
                         PRIMARY KEY (id)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -188,6 +191,25 @@ async def create_tables():
                     
                     
                     
+                    create_repository_table_query = """
+                    CREATE TABLE IF NOT EXISTS repository (
+                        id INT NOT NULL AUTO_INCREMENT,
+                        userid VARCHAR(30) DEFAULT NULL,
+                        productrepositoryid VARCHAR(30) DEFAULT NULL, 
+                        name TEXT DEFAULT NULL, 
+                        createddate DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        PRIMARY KEY (id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+                    """
+                    await cursor.execute(create_repository_table_query)
+                    print("Table 'repository' created successfully.")
+
+                    
+                    
+                    
+                    
+                    
+                    
                     create_medeia_table_query = """
                     CREATE TABLE IF NOT EXISTS medeia (
                         id INT NOT NULL AUTO_INCREMENT,
@@ -248,7 +270,6 @@ async def create_tables():
                     
                     
                     
-                    
                     create_review_table_query = """
                     CREATE TABLE IF NOT EXISTS review (
                         id INT NOT NULL AUTO_INCREMENT,
@@ -274,17 +295,7 @@ async def create_tables():
                     """
                     await cursor.execute(create_review_table_query)
                     print("Table 'review' created successfully.")
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-            
+     
               
                     
     except aiomysql.Error as e:
@@ -407,13 +418,12 @@ async def sign_up(
 
 async def send_email(receiver_email: str, user_id: str, username: str):
     try:
-         
         sender_email = "dilshanwickramaarachchi99@gmail.com"
         password = "lqtj loqv aiqz wsty"
         
         message = MIMEMultipart("alternative")
-        message["Subject"] = "Welcome to AI Platform - Please Confirm Your Email"
-        message["From"] = f"AI Platform <{sender_email}>"
+        message["Subject"] = "Welcome to STEPuP Ravoom - Please Confirm Your Email"
+        message["From"] = f"STEPuP Ravoom <{sender_email}>"
         message["To"] = receiver_email
         
         # Professional HTML email template
@@ -1028,11 +1038,11 @@ async def send_email_password_reset(receiver_email: str, code: str):
 
 # ----------------- Insert Product Endpoint -----------------
 
- 
 @app.post("/insert_product")
 async def insert_product(request: Request, productImage: UploadFile = File(None)):
     try:
         form = await request.form()  # Get all FormData
+
         # Single fields
         name = form.get("name")
         type_ = form.get("type")
@@ -1044,8 +1054,9 @@ async def insert_product(request: Request, productImage: UploadFile = File(None)
         productfb = form.get("productfb", "")
         productlinkedin = form.get("productlinkedin", "")
         productdescription = form.get("productdescription", "")
+        productdocumentation = form.get("productdocumentation", "")  # ✅ Documentation link
 
-        # Arrays: manually collect fields like founders[0], founders[1], etc.
+        # Arrays: manually collect fields like founders[0], repositories[0], etc.
         def get_array(prefix):
             return [v for k, v in form.items() if k.startswith(prefix)]
 
@@ -1054,36 +1065,43 @@ async def insert_product(request: Request, productImage: UploadFile = File(None)
         baseModels = get_array("baseModels")
         deployments = get_array("deployments")
         mediaPreviews = get_array("mediaPreviews")
+        repositories = get_array("repositories")  # ✅ Repository links
 
+        # Generate unique IDs
         productid = generate_random_id(30)
         productusecaseid = generate_random_id(30)
         productfounderid = generate_random_id(30)
         productbaseaimodelid = generate_random_id(30)
         productdeploymentid = generate_random_id(30)
         productmediaid = generate_random_id(30)
+        productrepositoryid = generate_random_id(30)  # ✅ Repository ID
 
         # Read image bytes
         image_bytes = await productImage.read() if productImage else None
 
+        # Insert into database
         async with aiomysql.create_pool(**async_db_config) as pool:
             async with pool.acquire() as conn:
                 async with conn.cursor() as cursor:
-                    # Insert main product
+
+                    # ✅ Updated INSERT query to include productdocumentation & productrepositoryid
                     await cursor.execute("""
                         INSERT INTO product (
                             userid, productid, productname, productimage, productcategory,
                             productlicense, producttechnology, productwebsite, productfundingstage,
                             productusecaseid, productfacebook, productlinkedin, productdescription,
-                            productfounderid, productbaseaimodelid, productdeploymentid, productmediaid
-                        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                            productfounderid, productbaseaimodelid, productdeploymentid, productmediaid,
+                            productdocumentation, productrepositoryid
+                        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                     """, (
                         userid, productid, name, image_bytes, type_, license_,
                         technology, website, fundingStage, productusecaseid,
                         productfb, productlinkedin, productdescription,
-                        productfounderid, productbaseaimodelid, productdeploymentid, productmediaid
+                        productfounderid, productbaseaimodelid, productdeploymentid, productmediaid,
+                        productdocumentation, productrepositoryid
                     ))
 
-                    # Insert child tables
+                    # ✅ Insert related child data tables
                     for uc in useCases:
                         await cursor.execute(
                             "INSERT INTO usecase (userid, productusecaseid, name) VALUES (%s,%s,%s)",
@@ -1109,6 +1127,11 @@ async def insert_product(request: Request, productImage: UploadFile = File(None)
                             "INSERT INTO medeia (userid, productmediaid, name) VALUES (%s,%s,%s)",
                             (userid, productmediaid, m)
                         )
+                    for r in repositories:  # ✅ Insert into repository table
+                        await cursor.execute(
+                            "INSERT INTO repository (userid, productrepositoryid, name) VALUES (%s,%s,%s)",
+                            (userid, productrepositoryid, r)
+                        )
 
                     await conn.commit()
 
@@ -1117,32 +1140,43 @@ async def insert_product(request: Request, productImage: UploadFile = File(None)
     except Exception as e:
         print(f"Error inserting product: {e}")
         raise HTTPException(status_code=500, detail="An error occurred while inserting product.")
-    
-    
-    
-    
+
 
 @app.post("/get_all_product_details")
 async def get_all_product_details(request: Request):
     try:
         data = await request.json()
         userid = data.get("userid")
+        page = data.get("page", 1)
+        limit = data.get("limit", 10)
+        
         if not userid:
             raise HTTPException(status_code=400, detail="userid is required")
 
+        # Validate pagination parameters
+        if page < 1:
+            page = 1
+        if limit < 1 or limit > 100:  # Set maximum limit to prevent abuse
+            limit = 10
+            
+        # Calculate offset
+        offset = (page - 1) * limit
+
         async with pool.acquire() as conn:
             async with conn.cursor(aiomysql.DictCursor) as cursor:
-                # Fetch products for the given user
+                # Fetch paginated products for the given user
                 await cursor.execute("""
-                    SELECT productid, productimage, productname, productcategory, productusecaseid ,userid
+                    SELECT productid, productimage, productname, productcategory, productusecaseid, userid
                     FROM product
                     WHERE userid = %s
-                """, (userid,))
+                    ORDER BY productid DESC
+                    LIMIT %s OFFSET %s
+                """, (userid, limit, offset))
                 
                 products = await cursor.fetchall()
 
                 if not products:
-                    return JSONResponse(content={"message": "No product found"}, status_code=200)
+                    return JSONResponse(content={"message": "No product found", "products": []}, status_code=200)
 
                 # For each product, fetch all related usecase names
                 for prod in products:
@@ -1153,6 +1187,8 @@ async def get_all_product_details(request: Request):
                         )
                         usecase_rows = await cursor.fetchall()
                         prod["usecasenames"] = [row["name"] for row in usecase_rows] if usecase_rows else []
+                    else:
+                        prod["usecasenames"] = []
 
                     # Convert product images to base64
                     if prod.get("productimage"):
@@ -1344,23 +1380,39 @@ async def get_product_details_basedon_usecase(request: Request):
 
 
 
-
-
-
 @app.post("/get_all_product_details_all")
-async def get_all_product_details_all():
+async def get_all_product_details_all(request: Request):
     try:
+        # Parse request body to get pagination parameters
+        body = await request.json()
+        page = body.get("page", 1)
+        limit = body.get("limit", 10)
+        
+        # Validate pagination parameters
+        if page < 1:
+            page = 1
+        if limit < 1 or limit > 100:  # Set maximum limit to prevent abuse
+            limit = 10
+            
+        # Calculate offset
+        offset = (page - 1) * limit
+        
         async with pool.acquire() as conn:
             async with conn.cursor(aiomysql.DictCursor) as cursor:
-                # Get all products in random order
+                # Get paginated products in random order
+                # Note: For consistent pagination with random order, you might want to use a seed
+                # or consider ordering by a fixed field like productid for better performance
                 await cursor.execute("""
-                    SELECT productid, productimage, productname, productcategory, productusecaseid,userid
-                    FROM product ORDER BY RAND()
-                """)
+                    SELECT productid, productimage, productname, productcategory, productusecaseid, userid
+                    FROM product 
+                    ORDER BY productid  -- Changed from RAND() for better pagination performance
+                    LIMIT %s OFFSET %s
+                """, (limit, offset))
+                
                 products = await cursor.fetchall()
 
                 if not products:
-                    return JSONResponse(content={"message": "No product found"}, status_code=200)
+                    return JSONResponse(content={"message": "No product found", "products": []}, status_code=200)
 
                 # For each product, fetch all related usecase names
                 for prod in products:
@@ -1371,6 +1423,8 @@ async def get_all_product_details_all():
                         )
                         usecase_rows = await cursor.fetchall()
                         prod["usecasenames"] = [row["name"] for row in usecase_rows] if usecase_rows else []
+                    else:
+                        prod["usecasenames"] = []
 
                     # Convert product images to base64
                     if prod.get("productimage"):
@@ -1386,18 +1440,26 @@ async def get_all_product_details_all():
 
 
 
-
-
 @app.post("/get_all_product_details_all_new")
-async def get_all_product_details_all_new():
+async def get_all_product_details_all_new(request: Request):
     try:
+        # Parse request body to get pagination parameters
+        body = await request.json()
+        page = body.get("page", 1)
+        limit = body.get("limit", 10)
+        
+        # Calculate offset
+        offset = (page - 1) * limit
+        
         async with pool.acquire() as conn:
             async with conn.cursor(aiomysql.DictCursor) as cursor:
-                # Get all products ordered by created date
+                # Get products with LIMIT and OFFSET for pagination
                 await cursor.execute("""
                     SELECT productid, productimage, productname, productcategory, productusecaseid
-                    FROM product ORDER BY createddate DESC
-                """)
+                    FROM product 
+                    ORDER BY createddate DESC
+                    LIMIT %s OFFSET %s
+                """, (limit, offset))
                 products = await cursor.fetchall()
 
                 if not products:
@@ -1420,9 +1482,439 @@ async def get_all_product_details_all_new():
                 return JSONResponse(content={"message": "yes", "products": products}, status_code=200)
 
     except Exception as e:
-        print(f"❌ Error fetching product details: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while fetching product details.")
+        print(f"❌ Error fetching new product details: {e}")
+        raise HTTPException(status_code=500, detail="An error occurred while fetching new product details.")
    
+    
+    
+    
+    
+    
+    
+
+
+
+
+
+
+
+
+@app.post("/get_all_product_details_all_most_viewed")
+async def get_all_product_details_all_most_viewed(request: Request):
+    try:
+        # Parse request body to get pagination parameters
+        body = await request.json()
+        page = body.get("page", 1)
+        limit = body.get("limit", 10)
+        
+        # Calculate offset
+        offset = (page - 1) * limit
+        
+        async with pool.acquire() as conn:
+            async with conn.cursor(aiomysql.DictCursor) as cursor:
+                # Get products with LIMIT and OFFSET for pagination
+                await cursor.execute("""
+                    SELECT productid, productimage, productname, productcategory, productusecaseid
+                    FROM product 
+                    ORDER BY counts DESC
+                    LIMIT %s OFFSET %s
+                """, (limit, offset))
+                products = await cursor.fetchall()
+
+                if not products:
+                    return JSONResponse(content={"message": "No product found"}, status_code=200)
+
+                # For each product, fetch the usecase name
+                for prod in products:
+                    if prod.get("productusecaseid"):
+                        await cursor.execute(
+                            "SELECT name FROM usecase WHERE productusecaseid = %s",
+                            (prod["productusecaseid"],)
+                        )
+                        usecase_rows = await cursor.fetchall()
+                        prod["usecasenames"] = [row["name"] for row in usecase_rows] if usecase_rows else []
+
+                    # Convert product images to base64
+                    if prod.get("productimage"):
+                        prod["productimage"] = base64.b64encode(prod["productimage"]).decode("utf-8")
+
+                return JSONResponse(content={"message": "yes", "products": products}, status_code=200)
+
+    except Exception as e:
+        print(f"❌ Error fetching most viewed product details: {e}")
+        raise HTTPException(status_code=500, detail="An error occurred while fetching most viewed product details.")
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+
+
+
+
+
+
+
+
+
+@app.post("/search_filter")
+async def search_filter(request: Request):
+    try:
+        data = await request.json()
+        typing_text = data.get("typpingtext", "").strip()
+        
+        if not typing_text:
+            raise HTTPException(status_code=400, detail="typing text is required")
+        
+        if len(typing_text) < 2:
+            return JSONResponse(content={"message": "no", "products": []}, status_code=200)
+
+        async with pool.acquire() as conn:
+            async with conn.cursor(aiomysql.DictCursor) as cursor:
+                
+                # Dictionary to store unique products by productid
+                unique_products = {}
+                
+                # 1. Search in products table (productname and productdescription)
+                product_search_query = """
+                    SELECT productid, productimage, productname, productcategory, 
+                           productdescription, userid
+                    FROM product 
+                    WHERE productname LIKE %s OR productdescription LIKE %s
+                """
+                
+                search_pattern = f"%{typing_text}%"
+                await cursor.execute(product_search_query, (search_pattern, search_pattern))
+                direct_products = await cursor.fetchall()
+                
+                # Process direct product matches
+                for prod in direct_products:
+                    product_id = prod["productid"]
+                    
+                    # Get usecases for this product
+                    usecase_query = """
+                        SELECT u.name 
+                        FROM usecase u 
+                        INNER JOIN product p ON u.productusecaseid = p.productusecaseid 
+                        WHERE p.productid = %s
+                    """
+                    await cursor.execute(usecase_query, (product_id,))
+                    usecases = await cursor.fetchall()
+                    
+                    # Process product image
+                    if prod.get("productimage"):
+                        prod["productimage"] = base64.b64encode(prod["productimage"]).decode("utf-8")
+                    else:
+                        prod["productimage"] = None
+                    
+                    # Add usecases to product
+                    prod["useCases"] = [uc["name"] for uc in usecases] if usecases else []
+                    
+                    # Store in unique products dictionary
+                    unique_products[product_id] = prod
+                
+                # 2. Search in usecase table and get related products
+                usecase_search_query = """
+                    SELECT productusecaseid, name 
+                    FROM usecase 
+                    WHERE name LIKE %s
+                """
+                
+                await cursor.execute(usecase_search_query, (search_pattern,))
+                matching_usecases = await cursor.fetchall()
+                
+                # For each matching usecase, get its products
+                for usecase in matching_usecases:
+                    productusecaseid = usecase["productusecaseid"]
+                    usecase_name = usecase["name"]
+                    
+                    # Get products for this usecase
+                    products_by_usecase_query = """
+                        SELECT productid, productimage, productname, productcategory, 
+                               productdescription, userid
+                        FROM product 
+                        WHERE productusecaseid = %s
+                    """
+                    
+                    await cursor.execute(products_by_usecase_query, (productusecaseid,))
+                    usecase_products = await cursor.fetchall()
+                    
+                    for prod in usecase_products:
+                        product_id = prod["productid"]
+                        
+                        # If product already exists, just add the usecase
+                        if product_id in unique_products:
+                            if usecase_name not in unique_products[product_id]["useCases"]:
+                                unique_products[product_id]["useCases"].append(usecase_name)
+                        else:
+                            # New product, get all its usecases
+                            all_usecases_query = """
+                                SELECT u.name 
+                                FROM usecase u 
+                                INNER JOIN product p ON u.productusecaseid = p.productusecaseid 
+                                WHERE p.productid = %s
+                            """
+                            await cursor.execute(all_usecases_query, (product_id,))
+                            all_usecases = await cursor.fetchall()
+                            
+                            # Process product image
+                            if prod.get("productimage"):
+                                prod["productimage"] = base64.b64encode(prod["productimage"]).decode("utf-8")
+                            else:
+                                prod["productimage"] = None
+                            
+                            # Add all usecases to product
+                            prod["useCases"] = [uc["name"] for uc in all_usecases] if all_usecases else []
+                            
+                            # Store in unique products dictionary
+                            unique_products[product_id] = prod
+                
+                # Convert dictionary values to list
+                products = list(unique_products.values())
+                
+                if not products:
+                    return JSONResponse(content={"message": "no", "products": []}, status_code=200)
+                
+                # Sort products by relevance (exact matches first, then partial matches)
+                def sort_key(product):
+                    name_exact = typing_text.lower() == product["productname"].lower()
+                    name_starts = product["productname"].lower().startswith(typing_text.lower())
+                    usecase_exact = any(typing_text.lower() == uc.lower() for uc in product["useCases"])
+                    
+                    # Priority: exact name match, exact usecase match, name starts with, others
+                    if name_exact:
+                        return 0
+                    elif usecase_exact:
+                        return 1
+                    elif name_starts:
+                        return 2
+                    else:
+                        return 3
+                
+                products.sort(key=sort_key)
+                
+                # Limit results to prevent overwhelming the UI
+                products = products[:20]  # Limit to 20 results
+                
+                return JSONResponse(
+                    content={"message": "yes", "products": products}, 
+                    status_code=200
+                )
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print(f"Error in search_filter: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail="An error occurred while searching products."
+        )
+
+    
+    
+    
+    
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.post("/get_products_using_search_enter")
+async def get_products_using_search_enter(request: Request):
+    try:
+        data = await request.json()
+        typing_text = data.get("typpingtext", "").strip()
+        
+        if not typing_text:
+            raise HTTPException(status_code=400, detail="typing text is required")
+        
+        if len(typing_text) < 2:
+            return JSONResponse(content={"message": "no", "products": []}, status_code=200)
+
+        async with pool.acquire() as conn:
+            async with conn.cursor(aiomysql.DictCursor) as cursor:
+                
+                # Dictionary to store unique products by productid
+                unique_products = {}
+                
+                # 1. Search in products table (productname and productdescription)
+                product_search_query = """
+                    SELECT productid, productimage, productname, productcategory, 
+                           productdescription, userid
+                    FROM product 
+                    WHERE productname LIKE %s OR productdescription LIKE %s
+                """
+                
+                search_pattern = f"%{typing_text}%"
+                await cursor.execute(product_search_query, (search_pattern, search_pattern))
+                direct_products = await cursor.fetchall()
+                
+                print(f"Direct products found: {len(direct_products)}")
+                
+                # Process direct product matches
+                for prod in direct_products:
+                    product_id = prod["productid"]
+                    
+                    # Get usecases for this product
+                    usecase_query = """
+                        SELECT u.name 
+                        FROM usecase u 
+                        INNER JOIN product p ON u.productusecaseid = p.productusecaseid 
+                        WHERE p.productid = %s
+                    """
+                    await cursor.execute(usecase_query, (product_id,))
+                    usecases = await cursor.fetchall()
+                    
+                    # Process product image
+                    if prod.get("productimage"):
+                        prod["productimage"] = base64.b64encode(prod["productimage"]).decode("utf-8")
+                    else:
+                        prod["productimage"] = None
+                    
+                    # Add usecases to product
+                    prod["useCases"] = [uc["name"] for uc in usecases] if usecases else []
+                    
+                    # Store in unique products dictionary
+                    unique_products[product_id] = prod
+                
+                # 2. Search in usecase table and get related products
+                usecase_search_query = """
+                    SELECT productusecaseid, name 
+                    FROM usecase 
+                    WHERE name LIKE %s
+                """
+                
+                await cursor.execute(usecase_search_query, (search_pattern,))
+                matching_usecases = await cursor.fetchall()
+                
+                print(f"Matching usecases found: {len(matching_usecases)}")
+                
+                # For each matching usecase, get its products
+                for usecase in matching_usecases:
+                    productusecaseid = usecase["productusecaseid"]
+                    usecase_name = usecase["name"]
+                    
+                    # Get products for this usecase
+                    products_by_usecase_query = """
+                        SELECT productid, productimage, productname, productcategory, 
+                               productdescription, userid
+                        FROM product 
+                        WHERE productusecaseid = %s
+                    """
+                    
+                    await cursor.execute(products_by_usecase_query, (productusecaseid,))
+                    usecase_products = await cursor.fetchall()
+                    
+                    for prod in usecase_products:
+                        product_id = prod["productid"]
+                        
+                        # If product already exists, just add the usecase
+                        if product_id in unique_products:
+                            if usecase_name not in unique_products[product_id]["useCases"]:
+                                unique_products[product_id]["useCases"].append(usecase_name)
+                        else:
+                            # New product, get all its usecases
+                            all_usecases_query = """
+                                SELECT u.name 
+                                FROM usecase u 
+                                INNER JOIN product p ON u.productusecaseid = p.productusecaseid 
+                                WHERE p.productid = %s
+                            """
+                            await cursor.execute(all_usecases_query, (product_id,))
+                            all_usecases = await cursor.fetchall()
+                            
+                            # Process product image
+                            if prod.get("productimage"):
+                                prod["productimage"] = base64.b64encode(prod["productimage"]).decode("utf-8")
+                            else:
+                                prod["productimage"] = None
+                            
+                            # Add all usecases to product
+                            prod["useCases"] = [uc["name"] for uc in all_usecases] if all_usecases else []
+                            
+                            # Store in unique products dictionary
+                            unique_products[product_id] = prod
+                
+                # Convert dictionary values to list
+                products = list(unique_products.values())
+                
+                print(f"Total unique products found: {len(products)}")
+                print(f"Search term: '{typing_text}'")
+                
+                if not products:
+                    print("No products found - returning empty result")
+                    return JSONResponse(content={"message": "no", "products": []}, status_code=200)
+                
+                # Sort products by relevance (exact matches first, then partial matches)
+                def sort_key(product):
+                    name_exact = typing_text.lower() == product["productname"].lower()
+                    name_starts = product["productname"].lower().startswith(typing_text.lower())
+                    usecase_exact = any(typing_text.lower() == uc.lower() for uc in product["useCases"])
+                    desc_contains = product.get("productdescription", "").lower().find(typing_text.lower()) != -1
+                    
+                    # Priority: exact name match, exact usecase match, name starts with, description contains, others
+                    if name_exact:
+                        return 0
+                    elif usecase_exact:
+                        return 1
+                    elif name_starts:
+                        return 2
+                    elif desc_contains:
+                        return 3
+                    else:
+                        return 4
+                
+                products.sort(key=sort_key)
+                
+                print(f"Returning {len(products)} products")
+                for i, prod in enumerate(products[:5]):  # Print first 5 for debugging
+                    print(f"Product {i+1}: {prod['productname']} - UseCases: {prod['useCases']}")
+                
+                return JSONResponse(
+                    content={"message": "yes", "products": products}, 
+                    status_code=200
+                )
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print(f"Error in get_products_using_search_enter: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail="An error occurred while searching products."
+        )
+        
+        
+        
+        
+        
+        
+        
+        
+        
     
     
     
@@ -1435,15 +1927,16 @@ async def get_all_product_details_all_new():
      
     
     
+     
     
-
+    
 @app.post("/get_product_details")
 async def get_product_details(request: Request):
     try:
         data = await request.json()
         productid = data.get("productid")
-        if   not productid:
-            raise HTTPException(status_code=400, detail="userid and productid are required")
+        if not productid:
+            raise HTTPException(status_code=400, detail="productid is required")
 
         async with pool.acquire() as conn:
             async with conn.cursor(aiomysql.DictCursor) as cursor:
@@ -1452,14 +1945,15 @@ async def get_product_details(request: Request):
                     SELECT productid, productimage, productname, productcategory,
                            productlicense, producttechnology, productwebsite, productfundingstage,
                            productfacebook, productlinkedin,
-                           productusecaseid, productfounderid, productbaseaimodelid, productdeploymentid, productmediaid,rating,productdescription,userid
+                           productusecaseid, productfounderid, productbaseaimodelid, productdeploymentid, productmediaid,productdocumentation,productrepositoryid,
+                           rating, productdescription, userid, counts
                     FROM product
-                    WHERE   productid = %s
-                """, (  productid))
+                    WHERE productid = %s
+                """, (productid,))
                 
                 product = await cursor.fetchone()
                 if not product:
-                    return JSONResponse(content={"message": "No product found"}, status_code=404)
+                    return JSONResponse(content={"message": "No product found"}, status_code=200)
 
                 # Convert image to base64 if exists
                 if product.get("productimage"):
@@ -1472,13 +1966,22 @@ async def get_product_details(request: Request):
                     "founders": ("founder", "productfounderid"),
                     "baseModels": ("baseaimodel", "productbaseaimodelid"),
                     "deployments": ("deployment", "productdeploymentid"),
-                    "mediaPreviews": ("medeia", "productmediaid")
+                    "mediaPreviews": ("medeia", "productmediaid"),
+                    "repositories": ("repository", "productrepositoryid"),
                 }
 
                 response_children = {}
                 for key, (table, column) in child_ids.items():
                     await cursor.execute(f"SELECT name FROM {table} WHERE {column} = %s", (product[column],))
                     response_children[key] = [row["name"] for row in await cursor.fetchall()]
+
+                # ✅ Increment counts column by 1
+                await cursor.execute("""
+                    UPDATE product
+                    SET counts = CAST(counts AS UNSIGNED) + 1
+                    WHERE productid = %s
+                """, (productid,))
+                await conn.commit()
 
                 # Combine all data
                 response_data = {
@@ -1493,6 +1996,7 @@ async def get_product_details(request: Request):
     except Exception as e:
         print(f"Error fetching product details: {e}")
         raise HTTPException(status_code=500, detail="An error occurred while fetching product details.")
+
 
 
 
@@ -1980,7 +2484,38 @@ async def delete_product(payload: dict = Body(...)):
             status_code=500,
             detail="An error occurred while deleting the product."
         )
-        
+
+
+
+
+
+
+
+
+    
+@app.post("/delete_review")
+async def delete_review(payload: dict = Body(...)):
+    try:
+        userid = payload.get("userid")
+        reviewid = payload.get("reviewid")
+
+        if not userid or not reviewid:
+            raise HTTPException(status_code=400, detail="userid and reviewid are required")
+
+        async with pool.acquire() as conn:
+            async with conn.cursor(aiomysql.DictCursor) as cursor:
+                delete_query = "DELETE FROM review WHERE userid = %s AND reviewid = %s"
+                await cursor.execute(delete_query, (userid, reviewid))
+                await conn.commit()
+
+                return JSONResponse(content={"message": "deleted"}, status_code=200)
+
+    except Exception as e:
+        print(f"❌ Error deleting review: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while deleting the review."
+        )
         
         
         
@@ -2010,6 +2545,33 @@ async def add_review(payload: dict = Body(...)):
         
         async with pool.acquire() as conn:
             async with conn.cursor(aiomysql.DictCursor) as cursor:
+                # CHECK IF REVIEW ALREADY EXISTS
+                existing_review_query = """
+                SELECT reviewid, commercialorpersonal, howlong, experiencerate, 
+                       efficiencyrate, documentationrate, paidornot, paidrate, comment
+                FROM review 
+                WHERE userid = %s AND productid = %s
+                """
+                await cursor.execute(existing_review_query, (userid, productid))
+                existing_review = await cursor.fetchone()
+                
+                if existing_review:
+                    # Return existing review data for frontend to handle
+                    return JSONResponse(content={
+                        "message": "review_exists",
+                        "existing_review": {
+                            "reviewid": existing_review['reviewid'],
+                            "ispaidtogglecommercialorpersonal": existing_review['commercialorpersonal'],
+                            "usageDuration": existing_review['howlong'],
+                            "experienceRating": int(existing_review['experiencerate']) if existing_review['experiencerate'] else 1,
+                            "efficiencyRating": int(existing_review['efficiencyrate']) if existing_review['efficiencyrate'] else 1,
+                            "documentationRating": int(existing_review['documentationrate']) if existing_review['documentationrate'] else 1,
+                            "isPaid": existing_review['paidornot'],
+                            "paidVersionRating": int(existing_review['paidrate']) if existing_review['paidrate'] else 1,
+                            "additionalComments": existing_review['comment'] or ""
+                        }
+                    }, status_code=200)
+                
                 # Get username from users table
                 user_query = "SELECT username, email FROM user WHERE userid = %s"
                 await cursor.execute(user_query, (userid,))
@@ -2026,7 +2588,7 @@ async def add_review(payload: dict = Body(...)):
                 colorcode = generate_dark_color()
                 createddate = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 
-                # Insert review into database
+                # Insert new review into database
                 insert_query = """
                 INSERT INTO review (
                     reviewid, userid, productid, commercialorpersonal, howlong, 
@@ -2103,6 +2665,165 @@ async def add_review(payload: dict = Body(...)):
         raise HTTPException(
             status_code=500,
             detail="An error occurred while adding the review."
+        )
+
+@app.post("/update_review")
+async def update_review(payload: dict = Body(...)):
+    try:
+        # Extract data from payload
+        reviewid = payload.get("reviewid")
+        productid = payload.get("productid")
+        userid = payload.get("userid")
+        ispaidtogglecommercialorpersonal = payload.get("ispaidtogglecommercialorpersonal")
+        usageDuration = payload.get("usageDuration")
+        experienceRating = payload.get("experienceRating")
+        efficiencyRating = payload.get("efficiencyRating")
+        documentationRating = payload.get("documentationRating")
+        isPaid = payload.get("isPaid")
+        paidVersionRating = payload.get("paidVersionRating")
+        additionalComments = payload.get("additionalComments")
+        
+        # Validate required fields
+        if not reviewid or not productid or not userid:
+            raise HTTPException(status_code=400, detail="reviewid, productid and userid are required")
+        
+        async with pool.acquire() as conn:
+            async with conn.cursor(aiomysql.DictCursor) as cursor:
+                # Verify the review belongs to the user
+                verify_query = "SELECT reviewid FROM review WHERE reviewid = %s AND userid = %s AND productid = %s"
+                await cursor.execute(verify_query, (reviewid, userid, productid))
+                verify_result = await cursor.fetchone()
+                
+                if not verify_result:
+                    raise HTTPException(status_code=404, detail="Review not found or you don't have permission to update it")
+                
+                # Update the review
+                update_query = """
+                UPDATE review SET 
+                    commercialorpersonal = %s,
+                    howlong = %s,
+                    experiencerate = %s,
+                    comment = %s,
+                    efficiencyrate = %s,
+                    documentationrate = %s,
+                    paidornot = %s,
+                    paidrate = %s
+                WHERE reviewid = %s AND userid = %s AND productid = %s
+                """
+                
+                await cursor.execute(update_query, (
+                    ispaidtogglecommercialorpersonal,
+                    usageDuration,
+                    str(experienceRating),
+                    additionalComments or "",
+                    str(efficiencyRating),
+                    str(documentationRating),
+                    isPaid,
+                    str(paidVersionRating) if paidVersionRating else None,
+                    reviewid,
+                    userid,
+                    productid
+                ))
+                
+                await conn.commit()
+                
+                # Auto-calculate and update product rating
+                rating_query = """
+                SELECT experiencerate, efficiencyrate, documentationrate, 
+                       paidornot, paidrate
+                FROM review 
+                WHERE productid = %s
+                """
+                
+                await cursor.execute(rating_query, (productid,))
+                rating_results = await cursor.fetchall()
+                
+                # Initialize rating_data with default values
+                rating_data = {"weighted_rating": 0.0}
+                
+                if rating_results:
+                    # Get global average for better calculation
+                    global_avg_query = """
+                    SELECT AVG((CAST(experiencerate AS DECIMAL) + CAST(efficiencyrate AS DECIMAL) + CAST(documentationrate AS DECIMAL)) / 3) as global_avg
+                    FROM review 
+                    WHERE experiencerate IS NOT NULL 
+                    AND efficiencyrate IS NOT NULL 
+                    AND documentationrate IS NOT NULL
+                    """
+                    
+                    await cursor.execute(global_avg_query)
+                    global_result = await cursor.fetchone()
+                    global_avg = float(global_result['global_avg']) if global_result and global_result['global_avg'] else 4.0
+                    
+                    # Calculate rating with dynamic global average
+                    rating_data = calculate_rating_from_reviews(rating_results, m=10, global_avg=global_avg)
+                    
+                    # Update product rating
+                    update_product_query = "UPDATE product SET rating = %s WHERE productid = %s"
+                    await cursor.execute(update_product_query, (rating_data["weighted_rating"], productid))
+                    await conn.commit()
+                
+                return JSONResponse(content={
+                    "message": "updated", 
+                    "reviewid": reviewid,
+                    "new_rating": rating_data["weighted_rating"]
+                }, status_code=200)
+                
+    except Exception as e:
+        print(f"❌ Error updating review: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while updating the review."
+        )
+
+@app.post("/check_existing_review")
+async def check_existing_review(payload: dict = Body(...)):
+    try:
+        productid = payload.get("productid")
+        userid = payload.get("userid")
+        
+        # Validate required fields
+        if not productid or not userid:
+            raise HTTPException(status_code=400, detail="productid and userid are required")
+        
+        async with pool.acquire() as conn:
+            async with conn.cursor(aiomysql.DictCursor) as cursor:
+                # Check if review exists
+                query = """
+                SELECT reviewid, commercialorpersonal, howlong, experiencerate, 
+                       efficiencyrate, documentationrate, paidornot, paidrate, comment
+                FROM review 
+                WHERE userid = %s AND productid = %s
+                """
+                
+                await cursor.execute(query, (userid, productid))
+                result = await cursor.fetchone()
+                
+                if result:
+                    return JSONResponse(content={
+                        "message": "found",
+                        "review": {
+                            "reviewid": result['reviewid'],
+                            "ispaidtogglecommercialorpersonal": result['commercialorpersonal'],
+                            "usageDuration": result['howlong'],
+                            "experienceRating": int(result['experiencerate']) if result['experiencerate'] else 1,
+                            "efficiencyRating": int(result['efficiencyrate']) if result['efficiencyrate'] else 1,
+                            "documentationRating": int(result['documentationrate']) if result['documentationrate'] else 1,
+                            "isPaid": result['paidornot'],
+                            "paidVersionRating": int(result['paidrate']) if result['paidrate'] else 1,
+                            "additionalComments": result['comment'] or ""
+                        }
+                    }, status_code=200)
+                else:
+                    return JSONResponse(content={
+                        "message": "not_found"
+                    }, status_code=200)
+                
+    except Exception as e:
+        print(f"❌ Error checking existing review: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while checking for existing review."
         )
 
 @app.post("/get_reviews")
@@ -2440,9 +3161,7 @@ async def get_user_reviews_page(payload: dict = Body(...)):
             status_code=200,
             detail="An error occurred while fetching user reviews."
         )
-
-    
-
+        
     
     
     
