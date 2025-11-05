@@ -1053,7 +1053,7 @@ async def insert_product(request: Request, productImage: UploadFile = File(None)
         productfb = form.get("productfb", "")
         productlinkedin = form.get("productlinkedin", "")
         productdescription = form.get("productdescription", "")
-        productdocumentation = form.get("productdocumentation", "")  # ✅ Documentation link
+        productdocumentation = form.get("documentationlink", "")  # ✅ Documentation link
 
         # Arrays: manually collect fields like founders[0], repositories[0], etc.
         def get_array(prefix):
@@ -1228,8 +1228,6 @@ async def get_all_product_details(request: Request):
 
 
 
-
-
 @app.post("/get_product_details_basedon_categoryname")
 async def get_product_details_basedon_categoryname(request: Request):
     try:
@@ -1262,11 +1260,12 @@ async def get_product_details_basedon_categoryname(request: Request):
                         if isinstance(value, (datetime, date)):
                             prod[key] = value.strftime("%Y-%m-%d %H:%M:%S")
 
-                # Collect all productusecaseids
+                # Collect all productusecaseids and productrepositoryids
                 productusecaseids = [prod["productusecaseid"] for prod in products if prod.get("productusecaseid")]
+                productrepositoryids = [prod["productrepositoryid"] for prod in products if prod.get("productrepositoryid")]
 
+                # Fetch usecases if any
                 if productusecaseids:
-                    # Fetch all usecases for these ids in one query
                     await cursor.execute(
                         f"""
                         SELECT productusecaseid, name 
@@ -1285,6 +1284,33 @@ async def get_product_details_basedon_categoryname(request: Request):
                     # Attach useCases to products
                     for prod in products:
                         prod["useCases"] = usecase_map.get(prod["productusecaseid"], [])
+                else:
+                    for prod in products:
+                        prod["useCases"] = []
+
+                # Fetch repositories if any
+                if productrepositoryids:
+                    await cursor.execute(
+                        f"""
+                        SELECT productrepositoryid, name 
+                        FROM repository 
+                        WHERE productrepositoryid IN ({','.join(['%s']*len(productrepositoryids))})
+                        """,
+                        tuple(productrepositoryids)
+                    )
+                    repositories = await cursor.fetchall()
+
+                    # Organize repositories by productrepositoryid
+                    repository_map = {}
+                    for repo in repositories:
+                        repository_map.setdefault(repo["productrepositoryid"], []).append(repo["name"])
+
+                    # Attach repositories to products
+                    for prod in products:
+                        prod["repositories"] = repository_map.get(prod["productrepositoryid"], [])
+                else:
+                    for prod in products:
+                        prod["repositories"] = []
 
                 return JSONResponse(content={"message": "yes", "products": products}, status_code=200)
 
@@ -1943,8 +1969,8 @@ async def get_product_details(request: Request):
                 await cursor.execute("""
                     SELECT productid, productimage, productname, productcategory,
                            productlicense, producttechnology, productwebsite, productfundingstage,
-                           productfacebook, productlinkedin,
-                           productusecaseid, productfounderid, productbaseaimodelid, productdeploymentid, productmediaid,productdocumentation,productrepositoryid,
+                           productfacebook, productlinkedin,productdocumentation,
+                           productusecaseid, productfounderid, productbaseaimodelid, productdeploymentid, productmediaid,productrepositoryid,
                            rating, productdescription, userid, counts
                     FROM product
                     WHERE productid = %s
@@ -1989,7 +2015,6 @@ async def get_product_details(request: Request):
                     "message": "yes"
                 }
 
-                print("Fetched product details:", response_data)
                 return JSONResponse(content=response_data, status_code=200)
 
     except Exception as e:
