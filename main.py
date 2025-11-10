@@ -3186,6 +3186,64 @@ async def get_user_reviews_page(payload: dict = Body(...)):
             detail="An error occurred while fetching user reviews."
         )
         
+        
+        
+        
+        
+
+
+
+
+@app.post("/product_comparison_review_count")
+async def product_comparison_review_count(payload: dict = Body(...)):
+    try:
+        product_ids = payload.get("product_ids", [])
+        
+        if not product_ids:
+            return {
+                "message": "error",
+                "detail": "product_ids list is required"
+            }
+        
+        async with pool.acquire() as conn:
+            async with conn.cursor(aiomysql.DictCursor) as cursor:
+                # Create placeholders for SQL IN clause
+                placeholders = ', '.join(['%s'] * len(product_ids))
+                
+                query = f"""
+                    SELECT 
+                        productid, 
+                        COUNT(*) as count 
+                    FROM review 
+                    WHERE productid IN ({placeholders})
+                    GROUP BY productid
+                """
+                
+                await cursor.execute(query, product_ids)
+                results = await cursor.fetchall()
+                
+                # Create a dictionary with all product IDs (including those with 0 reviews)
+                review_counts = {pid: 0 for pid in product_ids}
+                
+                # Update with actual counts
+                for row in results:
+                    review_counts[row['productid']] = row['count']
+                
+                # Convert to list format
+                review_counts_list = [
+                    {"productid": pid, "count": count} 
+                    for pid, count in review_counts.items()
+                ]
+                
+                return {
+                    "message": "success",
+                    "review_counts": review_counts_list
+                }
+                
+    except Exception as e:
+        print(f"❌ Error in product_comparison_review_count: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+        
     
     
     
