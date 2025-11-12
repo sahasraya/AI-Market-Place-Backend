@@ -1,0 +1,71 @@
+<!-- Hamburger Button -->
+<button class="hamburger-btn" (click)="toggleMenu()" [class.active]="isMenuOpen">
+  <span class="hamburger-line"></span>
+  <span class="hamburger-line"></span>
+  <span class="hamburger-line"></span>
+</button>
+
+<!-- Overlay -->
+<div class="overlay" *ngIf="isMenuOpen" (click)="toggleMenu()"></div>
+
+<!-- Side Menu -->
+<aside class="side-menu" [class.open]="isMenuOpen">
+  <div class="menu-header">
+    <div class="logo-section">
+      <img src="../../../assets/images/logo.png" alt="Logo" class="menu-logo">
+      <h2 class="menu-title">Ai Market Admin</h2>
+    </div>
+    <button class="close-btn" (click)="toggleMenu()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+
+  <nav class="menu-nav">
+    <ul class="menu-list">
+      <li *ngFor="let item of menuItems" class="menu-item">
+
+        <!-- Menu item without children -->
+        <div *ngIf="!item.children" class="menu-link" [class.active]="isActive(item.route)"
+          (click)="navigateTo(item.route)">
+          <span class="material-icons menu-icon">{{ item.icon }}</span>
+          <span class="menu-label">{{ item.label }}</span>
+        </div>
+
+        <!-- Menu item with children -->
+        <div *ngIf="item.children">
+          <div class="menu-link expandable" [class.expanded]="item.expanded" (click)="toggleSubmenu(item)">
+            <div class="menu-link-content">
+              <span class="material-icons menu-icon">{{ item.icon }}</span>
+              <span class="menu-label">{{ item.label }}</span>
+            </div>
+            <svg class="expand-icon" [class.rotated]="item.expanded" width="20" height="20" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+
+          <!-- Submenu -->
+          <ul class="submenu" [class.show]="item.expanded">
+            <li *ngFor="let child of item.children" class="submenu-item">
+              <div class="menu-link submenu-link" [class.active]="isActive(child.route)"
+                (click)="navigateTo(child.route)">
+                <span class="material-icons menu-icon">{{ child.icon }}</span>
+                <span class="menu-label">{{ child.label }}</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="menu-footer">
+    <button class="logout-btn" (click)="logout()">
+      <span class="material-icons">logout</span>
+      <span>Logout</span>
+    </button>
+  </div>
+</aside>

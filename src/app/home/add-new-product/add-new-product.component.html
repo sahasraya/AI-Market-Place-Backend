@@ -1,0 +1,496 @@
+<div class="add-product-container">
+  <!-- Header -->
+  <div class="header-section">
+    <button class="back-btn" (click)="goBack()">
+      <span class="material-icons">arrow_back</span>
+      Back
+    </button>
+    <h1 class="mainheading">
+      <span class="material-icons">add_circle</span>
+      {{ isEditMode ? 'Update Product' : 'Add New Product' }}
+    </h1>
+  </div>
+
+  <!-- Form Container -->
+  <div class="form-container">
+    <form [formGroup]="productAddingForm" (ngSubmit)="onSubmitProduct()" class="product-form">
+      
+      <!-- Product Image Preview -->
+      <div class="image-preview-section">
+        <img 
+          [src]="selectedImage || 'https://via.placeholder.com/300x200?text=Product+Image'" 
+          alt="Product Preview" 
+          class="product-preview-image" 
+        />
+        <div class="image-upload-overlay">
+          <span class="material-icons">add_photo_alternate</span>
+          <p>Click to upload image</p>
+        </div>
+      </div>
+
+      <!-- Image Upload -->
+      <div class="form-group">
+        <label>
+          <span class="material-icons label-icon">image</span>
+          Product Image *
+        </label>
+        <div class="file-upload-wrapper">
+          <input 
+            type="file" 
+            id="productImage"
+            (change)="onImageSelected($event)" 
+            accept="image/*" 
+            class="file-input"
+          />
+          <label for="productImage" class="file-upload-label">
+            <span class="material-icons">cloud_upload</span>
+            Choose Image
+          </label>
+          <span class="file-name">{{ selectedFileName || 'No file chosen' }}</span>
+        </div>
+      </div>
+
+      <!-- Featured Product Checkbox -->
+      <div class="form-group checkbox-group">
+        <label class="checkbox-label">
+          <input 
+            type="checkbox" 
+            formControlName="isFeatured"
+            class="checkbox-input"
+          />
+          <span class="checkbox-custom"></span>
+          <span class="checkbox-text">
+            <span class="material-icons">star</span>
+            Mark as Featured Product
+          </span>
+        </label>
+        <p class="helper-text">Featured products will be highlighted on the homepage</p>
+      </div>
+
+      <!-- Product Name -->
+      <div class="form-group">
+        <label>
+          <span class="material-icons label-icon">inventory_2</span>
+          Product Name *
+        </label>
+        <input 
+          type="text" 
+          formControlName="name" 
+          placeholder="Enter product name"
+          class="form-control"
+          [class.error]="productAddingForm.get('name')?.invalid && productAddingForm.get('name')?.touched"
+        />
+        <div class="error-message" *ngIf="productAddingForm.get('name')?.invalid && productAddingForm.get('name')?.touched">
+          <span class="material-icons">error</span>
+          Product name is required
+        </div>
+      </div>
+
+      <!-- Product Category -->
+      <div class="form-group">
+        <label>
+          <span class="material-icons label-icon">category</span>
+          Product Category *
+        </label>
+        <select formControlName="type" class="form-select">
+          <option value="" disabled>Select a Category</option>
+          <option value="AI model">AI Model</option>
+          <option value="Agent">Agent</option>
+          <option value="Voice">Voice</option>
+          <option value="Image">Image</option>
+          <option value="Video Editing">Video Editing</option>
+          <option value="Dev Tools">Dev Tools</option>
+          <option value="Utility">Utility</option>
+        </select>
+      </div>
+
+      <!-- License -->
+      <div class="form-group">
+        <label>
+          <span class="material-icons label-icon">gavel</span>
+          License *
+        </label>
+        <select formControlName="license" class="form-select">
+          <option value="" disabled>Select License</option>
+          <option value="Free">Free</option>
+          <option value="Paid">Paid</option>
+          <option value="Free&Paid">Free & Paid</option>
+        </select>
+      </div>
+
+      <!-- Technology -->
+      <div class="form-group">
+        <label>
+          <span class="material-icons label-icon">code</span>
+          Technology *
+        </label>
+        <select formControlName="technology" class="form-select">
+          <option value="" disabled>Select Technology</option>
+          <option value="SaaS">SaaS</option>
+          <option value="PaaS">PaaS</option>
+          <option value="IaaS">IaaS</option>
+        </select>
+      </div>
+
+      <!-- Website -->
+      <div class="form-group">
+        <label>
+          <span class="material-icons label-icon">link</span>
+          Website *
+        </label>
+        <input 
+          type="url" 
+          formControlName="website" 
+          placeholder="https://example.com"
+          class="form-control"
+        />
+      </div>
+
+      <!-- Funding Stage -->
+      <div class="form-group">
+        <label>
+          <span class="material-icons label-icon">rocket_launch</span>
+          Funding Stage *
+        </label>
+        <input 
+          type="text" 
+          formControlName="fundingStage" 
+          placeholder="e.g., Seed, Series A, Series B"
+          class="form-control"
+        />
+      </div>
+
+      <!-- Use Cases with Search -->
+      <div class="form-group">
+        <label>
+          <span class="material-icons label-icon">lightbulb</span>
+          Use Cases
+        </label>
+        
+        <!-- Selected Use Cases Chips -->
+        <div class="chips-container" *ngIf="selectedUseCases.length > 0">
+          <div class="chip" *ngFor="let usecase of selectedUseCases">
+            {{ usecase }}
+            <span class="material-icons chip-close" (click)="removeUseCase(usecase)">close</span>
+          </div>
+        </div>
+
+        <!-- Search Input -->
+        <div class="search-dropdown-wrapper">
+          <input 
+            type="text" 
+            placeholder="Search or type to add use case..."
+            [(ngModel)]="useCaseInput"
+            [ngModelOptions]="{standalone: true}"
+            (input)="onUseCaseInput($event)"
+            class="form-control"
+          />
+          
+          <!-- Dropdown Results -->
+          <div class="dropdown-results" *ngIf="filteredUseCases.length > 0">
+            <div 
+              class="dropdown-item" 
+              *ngFor="let usecase of filteredUseCases"
+              (click)="selectUseCase(usecase)"
+            >
+              <span class="material-icons">add_circle_outline</span>
+              {{ usecase }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documentation Link -->
+      <div class="form-group">
+        <label>
+          <span class="material-icons label-icon">menu_book</span>
+          Documentation Link
+        </label>
+        <input 
+          type="url" 
+          formControlName="documentationlink" 
+          placeholder="https://docs.example.com"
+          class="form-control"
+        />
+      </div>
+
+      <!-- Social Links Section -->
+      <div class="section-divider">
+        <span class="material-icons">share</span>
+        <h3>Social Media Links</h3>
+      </div>
+
+      <!-- Facebook Link -->
+      <div class="form-group">
+        <label>
+          <span class="material-icons label-icon">facebook</span>
+          Facebook Link
+        </label>
+        <input 
+          type="url" 
+          formControlName="productfb" 
+          placeholder="https://facebook.com/yourproduct"
+          class="form-control"
+        />
+      </div>
+
+      <!-- LinkedIn Link -->
+      <div class="form-group">
+        <label>
+          <span class="material-icons label-icon">business</span>
+          LinkedIn Link
+        </label>
+        <input 
+          type="url" 
+          formControlName="productlinkedin" 
+          placeholder="https://linkedin.com/company/yourproduct"
+          class="form-control"
+        />
+      </div>
+
+      <!-- Dynamic Fields Section -->
+      <div class="section-divider">
+        <span class="material-icons">settings</span>
+        <h3>Additional Information</h3>
+      </div>
+
+      <!-- Founders -->
+      <div class="form-group" formArrayName="founders">
+        <label>
+          <span class="material-icons label-icon">people</span>
+          Founders *
+        </label>
+        <div class="dynamic-fields-container">
+          <div 
+            *ngFor="let founder of founders.controls; let i = index" 
+            class="dynamic-field"
+          >
+            <input 
+              type="text" 
+              [formControlName]="i" 
+              placeholder="Enter founder name"
+              class="form-control"
+            />
+            <div class="field-actions">
+              <button 
+                type="button" 
+                class="btn-icon add" 
+                (click)="addField(founders)"
+                title="Add founder"
+              >
+                <span class="material-icons">add</span>
+              </button>
+              <button 
+                type="button" 
+                class="btn-icon remove" 
+                (click)="removeField(founders, i)"
+                [disabled]="founders.length === 1"
+                title="Remove founder"
+              >
+                <span class="material-icons">remove</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Base AI Models -->
+      <div class="form-group" formArrayName="baseModels">
+        <label>
+          <span class="material-icons label-icon">smart_toy</span>
+          Base AI Models *
+        </label>
+        <div class="dynamic-fields-container">
+          <div 
+            *ngFor="let model of baseModels.controls; let i = index" 
+            class="dynamic-field"
+          >
+            <input 
+              type="text" 
+              [formControlName]="i" 
+              placeholder="e.g., GPT-4, Claude, LLaMA"
+              class="form-control"
+            />
+            <div class="field-actions">
+              <button 
+                type="button" 
+                class="btn-icon add" 
+                (click)="addField(baseModels)"
+                title="Add model"
+              >
+                <span class="material-icons">add</span>
+              </button>
+              <button 
+                type="button" 
+                class="btn-icon remove" 
+                (click)="removeField(baseModels, i)"
+                [disabled]="baseModels.length === 1"
+                title="Remove model"
+              >
+                <span class="material-icons">remove</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deployments -->
+      <div class="form-group" formArrayName="deployments">
+        <label>
+          <span class="material-icons label-icon">cloud</span>
+          Deployment Options *
+        </label>
+        <div class="dynamic-fields-container">
+          <div 
+            *ngFor="let deploy of deployments.controls; let i = index" 
+            class="dynamic-field"
+          >
+            <input 
+              type="text" 
+              [formControlName]="i" 
+              placeholder="e.g., Cloud, On-Premise, Hybrid"
+              class="form-control"
+            />
+            <div class="field-actions">
+              <button 
+                type="button" 
+                class="btn-icon add" 
+                (click)="addField(deployments)"
+                title="Add deployment"
+              >
+                <span class="material-icons">add</span>
+              </button>
+              <button 
+                type="button" 
+                class="btn-icon remove" 
+                (click)="removeField(deployments, i)"
+                [disabled]="deployments.length === 1"
+                title="Remove deployment"
+              >
+                <span class="material-icons">remove</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Media Previews -->
+      <div class="form-group" formArrayName="mediaPreviews">
+        <label>
+          <span class="material-icons label-icon">play_circle</span>
+          Media Previews (Optional)
+        </label>
+        <div class="dynamic-fields-container">
+          <div 
+            *ngFor="let media of mediaPreviews.controls; let i = index" 
+            class="dynamic-field"
+          >
+            <input 
+              type="url" 
+              [formControlName]="i" 
+              placeholder="https://youtube.com/watch?v=..."
+              class="form-control"
+            />
+            <div class="field-actions">
+              <button 
+                type="button" 
+                class="btn-icon add" 
+                (click)="addField(mediaPreviews)"
+                title="Add media"
+              >
+                <span class="material-icons">add</span>
+              </button>
+              <button 
+                type="button" 
+                class="btn-icon remove" 
+                (click)="removeField(mediaPreviews, i)"
+                title="Remove media"
+              >
+                <span class="material-icons">remove</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Repositories -->
+      <div class="form-group" formArrayName="repositories">
+        <label>
+          <span class="material-icons label-icon">code_blocks</span>
+          Repositories (Optional)
+        </label>
+        <div class="dynamic-fields-container">
+          <div 
+            *ngFor="let repo of repositories.controls; let i = index" 
+            class="dynamic-field"
+          >
+            <input 
+              type="url" 
+              [formControlName]="i" 
+              placeholder="https://github.com/username/repo"
+              class="form-control"
+            />
+            <div class="field-actions">
+              <button 
+                type="button" 
+                class="btn-icon add" 
+                (click)="addField(repositories)"
+                title="Add repository"
+              >
+                <span class="material-icons">add</span>
+              </button>
+              <button 
+                type="button" 
+                class="btn-icon remove" 
+                (click)="removeField(repositories, i)"
+                title="Remove repository"
+              >
+                <span class="material-icons">remove</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label>
+          <span class="material-icons label-icon">description</span>
+          Product Description *
+        </label>
+        <textarea 
+          formControlName="productdescription" 
+          placeholder="Describe your product in detail..."
+          rows="6"
+          class="form-textarea"
+        ></textarea>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button 
+          type="button" 
+          class="btn btn-secondary" 
+          (click)="goBack()"
+        >
+          <span class="material-icons">close</span>
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          class="btn btn-primary" 
+          [disabled]="productAddingForm.invalid || isSubmitting"
+        >
+          <span *ngIf="!isSubmitting" class="btn-content">
+            <span class="material-icons">{{ isEditMode ? 'update' : 'check_circle' }}</span>
+            {{ isEditMode ? 'Update Product' : 'Create Product' }}
+          </span>
+          <span *ngIf="isSubmitting" class="loading-text">
+            <span class="spinner"></span>
+            {{ isEditMode ? 'Updating...' : 'Creating...' }}
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

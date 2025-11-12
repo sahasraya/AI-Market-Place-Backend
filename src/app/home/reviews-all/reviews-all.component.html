@@ -1,0 +1,77 @@
+<div class="reviews-container">
+  <h2 class="title">All Reviews</h2>
+
+  <table class="reviews-table">
+    <thead>
+      <tr>
+        <th>Review ID</th>
+        <th>User</th>
+        <th>Product</th>
+        <th>Usage Type</th>
+        <th>Duration</th>
+        <th>Experience</th>
+        <th>Paid Version</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let review of reviews">
+        <td class="clickable" (click)="openReview(review)">
+          {{ review.id }}
+        </td>
+
+        <td class="clickable user" (click)="openUser(review.userId)">
+          {{ review.userId }}
+        </td>
+
+        <td class="clickable product" (click)="openProduct(review.productName)">
+          {{ review.productName }}
+        </td>
+
+        <td>{{ review.usageType }}</td>
+        <td>{{ review.usageDuration }}</td>
+        <td>⭐ {{ review.overallExperience }}/5</td>
+        <td>{{ review.usingPaidVersion ? 'Yes' : 'No' }}</td>
+        <td>{{ review.createdDate | date: 'mediumDate' }}</td>
+
+        <td>
+          <button class="btn delete" (click)="deleteReview(review)">Delete</button>
+        </td>
+      </tr>
+
+      <tr *ngIf="reviews.length === 0">
+        <td colspan="9" class="no-results">No reviews available.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Review Popup -->
+  <app-review
+    *ngIf="selectedReview"
+    [review]="selectedReview"
+    [visible]="showReviewPopup"
+    (close)="closeReviewPopup()">
+  </app-review>
+
+  <!-- Product Popup -->
+  <app-product
+    *ngIf="selectedProduct"
+    [product]="selectedProduct"
+    [visible]="showProductPopup"
+    (close)="closeProductPopup()">
+  </app-product>
+
+  <!-- User Popup -->
+  <div class="popup-overlay" *ngIf="showUserPopup">
+    <div class="popup-box">
+      <h3>User Details</h3>
+      <p><strong>ID:</strong> {{ selectedUser?.userId }}</p>
+      <p><strong>Name:</strong> {{ selectedUser?.userName }}</p>
+      <p><strong>Email:</strong> {{ selectedUser?.email }}</p>
+      <p><strong>Country:</strong> {{ selectedUser?.country }}</p>
+      <button class="btn close" (click)="closeUserPopup()">Close</button>
+    </div>
+  </div>
+</div>

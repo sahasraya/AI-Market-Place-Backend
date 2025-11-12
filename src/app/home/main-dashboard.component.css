@@ -1,0 +1,42 @@
+.main-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-family: var(--font-family);
+}
+
+/* Left sidebar */
+.side-menu {
+  width: 250px; /* adjust as needed */
+  background-color: var(--primary-color);
+  color: #fff;
+  box-shadow: var(--shadow-light);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main content on the right */
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  background-color: var(--card-bg-color);
+  overflow-y: auto;
+}
+
+/* Responsive behavior */
+@media (max-width: 768px) {
+  .main-layout {
+    flex-direction: column;
+  }
+
+  .side-menu {
+    width: 100%;
+    background-color: white;
+  }
+
+  .main-content {
+    padding: 1rem;
+  }
+}

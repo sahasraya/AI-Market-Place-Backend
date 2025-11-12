@@ -1,0 +1,204 @@
+<div class="users-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1 class="mainheading">
+            <span class="material-icons">people</span>
+            User Management
+        </h1>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-section">
+        <div class="search-box">
+            <span class="material-icons">search</span>
+            <input type="text" 
+                   placeholder="Search users by name, email, or designation..." 
+                   [(ngModel)]="searchText"
+                   (input)="onSearch()"
+                   class="search-input">
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="table-container">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Designation</th>
+                    <th>About Me</th> 
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let user of filteredUsers" class="table-row" [class.disabled-user]="user.status === 'disabled'">
+                    <td class="user-info">
+                        <div class="user-avatar">
+                            {{ user.name.charAt(0).toUpperCase() }}
+                        </div>
+                        <div class="user-details">
+                            <div class="user-name">{{ user.name }}</div>
+                            <div class="user-email">{{ user.email }}</div>
+                            <div class="social-links">
+                                <a [href]="user.linkedin" target="_blank" class="social-link" title="LinkedIn">
+                                    <span class="material-icons">business</span>
+                                </a>
+                                <a [href]="user.facebook" target="_blank" class="social-link" title="Facebook">
+                                    <span class="material-icons">facebook</span>
+                                </a>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="designation-badge">{{ user.designation }}</span>
+                    </td>
+                    <td>
+                        <div class="about-text">{{ user.aboutMe }}</div>
+                    </td>
+                    
+                    <td>
+                        <span class="status-badge" [class.active]="user.status === 'active'" [class.disabled]="user.status === 'disabled'">
+                            {{ user.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn products" (click)="seeAllProducts(user)" title="See Products">
+                                <span class="material-icons">inventory_2</span>
+                            </button>
+                            <button class="action-btn reviews" (click)="seeAllReviews(user)" title="See Reviews">
+                                <span class="material-icons">rate_review</span>
+                            </button>
+                            <button class="action-btn toggle" (click)="toggleUserStatus(user)" 
+                                    [title]="user.status === 'active' ? 'Disable User' : 'Enable User'">
+                                <span class="material-icons">{{ user.status === 'active' ? 'block' : 'check_circle' }}</span>
+                            </button>
+                            <button class="action-btn delete" (click)="removeUser(user.id)" title="Remove User">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div *ngIf="filteredUsers.length === 0" class="no-data">
+            <span class="material-icons">person_off</span>
+            <p>No users found</p>
+        </div>
+    </div>
+
+    <!-- Products Drawer -->
+    <div class="drawer-overlay" *ngIf="showProductsDrawer" (click)="closeDrawer()"></div>
+    <div class="drawer products-drawer" [class.open]="showProductsDrawer">
+        <div class="drawer-header">
+            <h2 class="drawer-title">
+                <span class="material-icons">inventory_2</span>
+                {{ selectedUser?.name }}'s Products
+            </h2>
+            <button class="close-btn" (click)="closeDrawer()">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="drawer-body">
+            <div *ngIf="displayedProducts.length === 0" class="no-data-drawer">
+                <span class="material-icons">inventory_2</span>
+                <p>No products found for this user</p>
+            </div>
+
+            <div *ngIf="displayedProducts.length > 0" class="products-grid">
+                <div *ngFor="let product of displayedProducts" class="product-card" (click)="openProductPopup(product)">
+                    <img [src]="product.productImage" [alt]="product.productName" class="product-image">
+                    <div class="product-info">
+                        <h3 class="product-name">{{ product.productName }}</h3>
+                        <p class="product-category">{{ product.productCategory }}</p>
+                        <div class="product-meta">
+                            <span class="meta-item">
+                                <span class="material-icons">code</span>
+                                {{ product.technology[0] }}
+                            </span>
+                            <span class="meta-item">
+                                <span class="material-icons">rocket_launch</span>
+                                {{ product.fundingStage }}
+                            </span>
+                        </div>
+                        <p class="product-description">{{ product.description }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <button *ngIf="hasMoreProducts" class="load-more-btn" (click)="loadMoreProducts()">
+                <span class="material-icons">expand_more</span>
+                Load More Products
+            </button>
+        </div>
+    </div>
+
+    <!-- Reviews Drawer -->
+    <div class="drawer-overlay" *ngIf="showReviewsDrawer" (click)="closeDrawer()"></div>
+    <div class="drawer reviews-drawer" [class.open]="showReviewsDrawer">
+        <div class="drawer-header">
+            <h2 class="drawer-title">
+                <span class="material-icons">rate_review</span>
+                {{ selectedUser?.name }}'s Reviews
+            </h2>
+            <button class="close-btn" (click)="closeDrawer()">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="drawer-body">
+            <div *ngIf="displayedReviews.length === 0" class="no-data-drawer">
+                <span class="material-icons">rate_review</span>
+                <p>No reviews found for this user</p>
+            </div>
+
+            <div *ngIf="displayedReviews.length > 0" class="reviews-list">
+                <div *ngFor="let review of displayedReviews" class="review-card" (click)="openReviewPopup(review)">
+                    <div class="review-header">
+                        <h3 class="review-product-name">{{ review.productName }}</h3>
+                        <span class="review-date">{{ review.createdDate | date: 'MMM dd, yyyy' }}</span>
+                    </div>
+                    <div class="review-ratings">
+                        <div class="rating-item">
+                            <span class="rating-label">Overall:</span>
+                            <div class="stars">
+                                <span *ngFor="let star of getStars(review.overallExperience)" class="material-icons">{{ star }}</span>
+                            </div>
+                        </div>
+                        <div class="rating-item">
+                            <span class="rating-label">Efficiency:</span>
+                            <div class="stars">
+                                <span *ngFor="let star of getStars(review.efficiencyRating)" class="material-icons">{{ star }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="review-comment">{{ review.otherComments }}</p>
+                    <div class="review-meta">
+                        <span class="meta-badge">{{ review.usageType }}</span>
+                        <span class="meta-badge">{{ review.usageDuration }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <button *ngIf="hasMoreReviews" class="load-more-btn" (click)="loadMoreReviews()">
+                <span class="material-icons">expand_more</span>
+                Load More Reviews
+            </button>
+        </div>
+    </div>
+
+    <app-product
+        [product]="selectedProduct"
+        [visible]="showProductPopup"
+        (close)="closeProductPopup()">
+    </app-product>
+
+    <app-review
+        [review]="selectedReview"
+        [visible]="showReviewPopup"
+        (close)="closeReviewPopup()">
+    </app-review>
+</div>

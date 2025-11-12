@@ -1,0 +1,125 @@
+<div class="overlay" *ngIf="visible" (click)="onOverlayClick()"></div>
+<div class="popup product-popup" *ngIf="visible && product" (click)="$event.stopPropagation()">
+    <div class="popup-header">
+        <h2 class="popup-title">
+            <span class="material-icons">inventory_2</span>
+            Product Details
+        </h2>
+        <button class="close-btn" (click)="closePopup()">
+            <span class="material-icons">close</span>
+        </button>
+    </div>
+
+    <div class="popup-body">
+        <div class="product-detail">
+            <img [src]="product.productImage" [alt]="product.productName" class="detail-image">
+            
+            <div class="detail-section">
+                <h3 class="detail-name">{{ product.productName }}</h3>
+                <p class="detail-category">{{ product.productCategory }}</p>
+            </div>
+
+            <div class="detail-section">
+                <h4><span class="material-icons">description</span> Description</h4>
+                <p>{{ product.description }}</p>
+            </div>
+
+            <div class="detail-section">
+                <h4><span class="material-icons">code</span> Technologies</h4>
+                <div class="tags">
+                    <span *ngFor="let tech of product.technology" class="tag">{{ tech }}</span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h4><span class="material-icons">lightbulb</span> Use Cases</h4>
+                <div class="tags">
+                    <span *ngFor="let usecase of product.useCases" class="tag">{{ usecase }}</span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h4><span class="material-icons">people</span> Founders</h4>
+                <div class="tags">
+                    <span *ngFor="let founder of product.founders" class="tag">{{ founder }}</span>
+                </div>
+            </div>
+
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="material-icons">gavel</span>
+                    <div>
+                        <strong>License</strong>
+                        <p>{{ product.license }}</p>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <span class="material-icons">rocket_launch</span>
+                    <div>
+                        <strong>Funding Stage</strong>
+                        <p>{{ product.fundingStage }}</p>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <span class="material-icons">link</span>
+                    <div>
+                        <strong>Website</strong>
+                        <a [href]="product.website" target="_blank">{{ product.website }}</a>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <span class="material-icons">menu_book</span>
+                    <div>
+                        <strong>Documentation</strong>
+                        <a [href]="product.documentationLink" target="_blank">View Docs</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h4><span class="material-icons">smart_toy</span> AI Models</h4>
+                <div class="tags">
+                    <span *ngFor="let model of product.baseAIModel" class="tag">{{ model }}</span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h4><span class="material-icons">cloud</span> Deployment Options</h4>
+                <div class="tags">
+                    <span *ngFor="let deploy of product.deployment" class="tag">{{ deploy }}</span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h4><span class="material-icons">code_blocks</span> Repositories</h4>
+                <div class="links">
+                    <a *ngFor="let repo of product.repositories" [href]="repo" target="_blank" class="link-item">
+                        <span class="material-icons">link</span>
+                        {{ repo }}
+                    </a>
+                </div>
+            </div>
+
+            <div class="detail-section" *ngIf="product.mediaPreviews && product.mediaPreviews.length > 0">
+                <h4><span class="material-icons">play_circle</span> Media Previews</h4>
+                <div class="links">
+                    <a *ngFor="let media of product.mediaPreviews" [href]="media" target="_blank" class="link-item">
+                        <span class="material-icons">link</span>
+                        {{ media }}
+                    </a>
+                </div>
+            </div>
+
+            <div class="social-section">
+                <a [href]="product.productLinkedInLink" target="_blank" class="social-btn linkedin">
+                    <span class="material-icons">business</span>
+                    LinkedIn
+                </a>
+                <a [href]="product.productFacebookLink" target="_blank" class="social-btn facebook">
+                    <span class="material-icons">facebook</span>
+                    Facebook
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
