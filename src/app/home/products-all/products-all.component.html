@@ -2,7 +2,6 @@
   <!-- Header Section -->
   <div class="header-section">
     <h1 class="mainheading">
-      <span class="material-icons">inventory_2</span>
       All Products
     </h1>
     <button class="createnewbtn" (click)="addProduct()">
@@ -15,17 +14,9 @@
   <div class="search-section">
     <div class="search-wrapper">
       <span class="material-icons search-icon">search</span>
-      <input
-        type="text"
-        placeholder="Search by product name, category, technology..."
-        [(ngModel)]="searchText"
-        (input)="onSearch()"
-        class="search-input"
-      />
-      <span 
-        *ngIf="searchText" 
-        class="material-icons clear-icon" 
-        (click)="clearSearch()">
+      <input type="text" placeholder="Search by product name, category, technology..." [(ngModel)]="searchText"
+        (input)="onSearch()" class="search-input" />
+      <span *ngIf="searchText" class="material-icons clear-icon" (click)="clearSearch()">
         clear
       </span>
     </div>
@@ -49,14 +40,10 @@
       <tbody>
         <tr *ngFor="let product of filteredProducts" class="table-row">
           <td>
-            <img 
-              [src]="product.productImage" 
-              [alt]="product.productName" 
-              class="product-img"
+            <img [src]="product.productImage" [alt]="product.productName" class="product-img"
               (error)="onImageError($event)" />
           </td>
           <td class="product-name clickable" (click)="openProduct(product)">
-            <span class="material-icons product-icon">inventory_2</span>
             {{ product.productName }}
           </td>
           <td>
@@ -78,7 +65,6 @@
           </td>
           <td>
             <button class="btn-icon reviews-btn" (click)="seeAllReviews(product)" title="See Reviews">
-              <span class="material-icons">rate_review</span>
               <span class="review-count">{{ getReviewCount(product.id) }}</span>
             </button>
           </td>
@@ -106,10 +92,7 @@
   </div>
 
   <!-- Product Popup -->
-  <app-product
-    *ngIf="selectedProduct"
-    [product]="selectedProduct"
-    [visible]="showProductPopup"
+  <app-product *ngIf="selectedProduct" [product]="selectedProduct" [visible]="showProductPopup"
     (close)="closeProductPopup()">
   </app-product>
 
@@ -128,7 +111,8 @@
 
     <div class="drawer-body" *ngIf="selectedProductForReviews">
       <div class="drawer-info">
-        <img [src]="selectedProductForReviews.productImage" [alt]="selectedProductForReviews.productName" class="drawer-product-img">
+        <img [src]="selectedProductForReviews.productImage" [alt]="selectedProductForReviews.productName"
+          class="drawer-product-img">
         <div class="drawer-product-info">
           <h3>{{ selectedProductForReviews.productName }}</h3>
           <p>{{ selectedProductForReviews.productCategory }}</p>
@@ -137,10 +121,7 @@
       </div>
 
       <div class="reviews-list">
-        <div 
-          *ngFor="let review of displayedReviews" 
-          class="review-card"
-          (click)="openReviewPopup(review)">
+        <div *ngFor="let review of displayedReviews" class="review-card" (click)="openReviewPopup(review)">
           <div class="review-header">
             <div class="review-user">
               <span class="material-icons user-icon">account_circle</span>
@@ -174,7 +155,8 @@
             </div>
           </div>
 
-          <p class="review-comment">{{ review.otherComments | slice:0:120 }}{{ review.otherComments.length > 120 ? '...' : '' }}</p>
+          <p class="review-comment">{{ review.otherComments | slice:0:120 }}{{ review.otherComments.length > 120 ? '...'
+            : '' }}</p>
         </div>
 
         <div *ngIf="productReviews.length === 0" class="no-reviews">
@@ -182,10 +164,7 @@
           <p>No reviews yet for this product</p>
         </div>
 
-        <button 
-          *ngIf="hasMoreReviews" 
-          class="load-more-btn"
-          (click)="loadMoreReviews()">
+        <button *ngIf="hasMoreReviews" class="load-more-btn" (click)="loadMoreReviews()">
           <span class="material-icons">expand_more</span>
           Load More Reviews
         </button>
@@ -194,10 +173,6 @@
   </div>
 
   <!-- Review Popup -->
-  <app-review
-    *ngIf="selectedReview"
-    [review]="selectedReview"
-    [visible]="showReviewPopup"
-    (close)="closeReviewPopup()">
+  <app-review *ngIf="selectedReview" [review]="selectedReview" [visible]="showReviewPopup" (close)="closeReviewPopup()">
   </app-review>
 </div>

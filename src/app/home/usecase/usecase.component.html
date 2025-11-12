@@ -2,7 +2,6 @@
     <!-- Header Section -->
     <div class="header-section">
         <h1 class="mainheading">
-            <span class="material-icons">description</span>
             Use Cases Management
         </h1>
         <button class="createnewbtn" (click)="openCreatePopup()">
@@ -24,7 +23,6 @@
             <tbody>
                 <tr *ngFor="let usecase of usecases" class="table-row">
                     <td class="store-name">
-                        <span class="material-icons store-icon">description</span>
                         {{ usecase.usecaseName }}
                     </td>
                     <td>{{ usecase.createdDate | date: 'MMM dd, yyyy' }}</td>
@@ -71,15 +69,17 @@
                         Use Case Name *
                     </label>
                     <input type="text" id="usecaseName" formControlName="usecaseName"
-                        placeholder="Enter use case name (e.g., User Authentication, Payment Processing)" 
+                        placeholder="Enter use case name (e.g., User Authentication, Payment Processing)"
                         class="form-control"
                         [class.error]="usecaseForm.get('usecaseName')?.invalid && usecaseForm.get('usecaseName')?.touched"
                         [class.success]="usecaseForm.get('usecaseName')?.valid && usecaseForm.get('usecaseName')?.touched">
                     <div class="error-message"
                         *ngIf="usecaseForm.get('usecaseName')?.invalid && usecaseForm.get('usecaseName')?.touched">
                         <span class="material-icons">error</span>
-                        <span *ngIf="usecaseForm.get('usecaseName')?.errors?.['required']">Use case name is required</span>
-                        <span *ngIf="usecaseForm.get('usecaseName')?.errors?.['minlength']">Use case name must be at least 3 characters</span>
+                        <span *ngIf="usecaseForm.get('usecaseName')?.errors?.['required']">Use case name is
+                            required</span>
+                        <span *ngIf="usecaseForm.get('usecaseName')?.errors?.['minlength']">Use case name must be at
+                            least 3 characters</span>
                     </div>
                 </div>
 

@@ -1,77 +1,181 @@
 <div class="reviews-container">
-  <h2 class="title">All Reviews</h2>
+  <!-- Header Section -->
+  <div class="header-section">
+    <h1 class="mainheading">
+      All Reviews
+    </h1>
 
-  <table class="reviews-table">
-    <thead>
-      <tr>
-        <th>Review ID</th>
-        <th>User</th>
-        <th>Product</th>
-        <th>Usage Type</th>
-        <th>Duration</th>
-        <th>Experience</th>
-        <th>Paid Version</th>
-        <th>Date</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
+  </div>
 
-    <tbody>
-      <tr *ngFor="let review of reviews">
-        <td class="clickable" (click)="openReview(review)">
-          {{ review.id }}
-        </td>
+  <!-- Search Section -->
+  <div class="search-section">
+    <div class="search-wrapper">
+      <span class="material-icons search-icon">search</span>
+      <input type="text" placeholder="Search by review ID, user, product, usage type..." [(ngModel)]="searchText"
+        (input)="onSearch()" class="search-input" />
+      <span *ngIf="searchText" class="material-icons clear-icon" (click)="clearSearch()">
+        clear
+      </span>
+    </div>
+  </div>
 
-        <td class="clickable user" (click)="openUser(review.userId)">
-          {{ review.userId }}
-        </td>
+  <!-- Reviews Table -->
+  <div class="table-container">
+    <table class="reviews-table">
+      <thead>
+        <tr>
+          <th>Review ID</th>
+          <th>User</th>
+          <th>Product</th>
+          <th>Usage Type</th>
+          <th>Duration</th>
+          <th>Experience</th>
+          <th>Ratings</th>
+          <th>Paid Version</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let review of displayedReviews" class="table-row">
+          <td class="review-id clickable" (click)="openReview(review)">
+            {{ review.id }}
+          </td>
 
-        <td class="clickable product" (click)="openProduct(review.productName)">
-          {{ review.productName }}
-        </td>
+          <td class="clickable user-cell" (click)="openUser(review.userId)">
+            <span class="user-id">{{ review.userId }}</span>
+          </td>
 
-        <td>{{ review.usageType }}</td>
-        <td>{{ review.usageDuration }}</td>
-        <td>⭐ {{ review.overallExperience }}/5</td>
-        <td>{{ review.usingPaidVersion ? 'Yes' : 'No' }}</td>
-        <td>{{ review.createdDate | date: 'mediumDate' }}</td>
+          <td class="clickable product-cell" (click)="openProduct(review.productName)">
+            <span class="product-name">{{ review.productName }}</span>
+          </td>
 
-        <td>
-          <button class="btn delete" (click)="deleteReview(review)">Delete</button>
-        </td>
-      </tr>
+          <td>
+            <span class="badge usage-badge">{{ review.usageType }}</span>
+          </td>
 
-      <tr *ngIf="reviews.length === 0">
-        <td colspan="9" class="no-results">No reviews available.</td>
-      </tr>
-    </tbody>
-  </table>
+          <td>
+            <div class="duration-cell">
+              <span class="material-icons">schedule</span>
+              {{ review.usageDuration }}
+            </div>
+          </td>
+
+          <td>
+            <div class="rating-cell">
+              <div class="stars">
+                <span *ngFor="let star of getStars(review.overallExperience)" class="material-icons star">
+                  {{ star }}
+                </span>
+              </div>
+              <span class="rating-value">{{ review.overallExperience }}/5</span>
+            </div>
+          </td>
+
+          <td>
+            <div class="ratings-detail">
+              <div class="rating-item" title="Efficiency">
+                <span class="material-icons">speed</span>
+                <span>{{ review.efficiencyRating }}</span>
+              </div>
+              <div class="rating-item" title="Documentation">
+                <span class="material-icons">description</span>
+                <span>{{ review.documentationRating }}</span>
+              </div>
+            </div>
+          </td>
+
+          <td>
+            <span class="badge" [ngClass]="review.usingPaidVersion ? 'paid-badge' : 'free-badge'">
+              <span class="material-icons">{{ review.usingPaidVersion ? 'paid' : 'money_off' }}</span>
+              {{ review.usingPaidVersion ? 'Paid' : 'Free' }}
+            </span>
+          </td>
+
+          <td>
+            <div class="date-cell">
+              <span class="material-icons">event</span>
+              {{ review.createdDate | date: 'MMM dd, yyyy' }}
+            </div>
+          </td>
+
+          <td>
+            <div class="action-buttons">
+
+              <button class="action-btn delete" (click)="deleteReview(review)" title="Delete">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="filteredReviews.length === 0" class="no-data">
+      <span class="material-icons">rate_review</span>
+      <p>No reviews found</p>
+    </div>
+  </div>
+
+  <!-- Load More Button -->
+  <div class="load-more-section" *ngIf="hasMoreReviews()">
+    <button class="load-more-btn" (click)="loadMore()">
+      <span class="material-icons">expand_more</span>
+      Load More Reviews ({{ displayedReviews.length }} of {{ filteredReviews.length }})
+    </button>
+  </div>
 
   <!-- Review Popup -->
-  <app-review
-    *ngIf="selectedReview"
-    [review]="selectedReview"
-    [visible]="showReviewPopup"
-    (close)="closeReviewPopup()">
+  <app-review *ngIf="selectedReview" [review]="selectedReview" [visible]="showReviewPopup" (close)="closeReviewPopup()">
   </app-review>
 
   <!-- Product Popup -->
-  <app-product
-    *ngIf="selectedProduct"
-    [product]="selectedProduct"
-    [visible]="showProductPopup"
+  <app-product *ngIf="selectedProduct" [product]="selectedProduct" [visible]="showProductPopup"
     (close)="closeProductPopup()">
   </app-product>
 
   <!-- User Popup -->
-  <div class="popup-overlay" *ngIf="showUserPopup">
-    <div class="popup-box">
-      <h3>User Details</h3>
-      <p><strong>ID:</strong> {{ selectedUser?.userId }}</p>
-      <p><strong>Name:</strong> {{ selectedUser?.userName }}</p>
-      <p><strong>Email:</strong> {{ selectedUser?.email }}</p>
-      <p><strong>Country:</strong> {{ selectedUser?.country }}</p>
-      <button class="btn close" (click)="closeUserPopup()">Close</button>
+  <div class="popup-overlay" *ngIf="showUserPopup" (click)="closeUserPopup()"></div>
+  <div class="popup-box" *ngIf="showUserPopup" [class.show]="showUserPopup">
+    <div class="popup-header">
+      <h3>
+        <span class="material-icons">person</span>
+        User Details
+      </h3>
+      <button class="close-popup-btn" (click)="closeUserPopup()">
+        <span class="material-icons">close</span>
+      </button>
     </div>
+    <div class="popup-content">
+      <div class="user-detail-item">
+        <span class="material-icons">fingerprint</span>
+        <div class="detail-info">
+          <label>User ID</label>
+          <span>{{ selectedUser?.userId }}</span>
+        </div>
+      </div>
+      <div class="user-detail-item">
+        <span class="material-icons">person</span>
+        <div class="detail-info">
+          <label>Name</label>
+          <span>{{ selectedUser?.userName }}</span>
+        </div>
+      </div>
+      <div class="user-detail-item">
+        <span class="material-icons">email</span>
+        <div class="detail-info">
+          <label>Email</label>
+          <span>{{ selectedUser?.email }}</span>
+        </div>
+      </div>
+      <div class="user-detail-item">
+        <span class="material-icons">public</span>
+        <div class="detail-info">
+          <label>Country</label>
+          <span>{{ selectedUser?.country }}</span>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>

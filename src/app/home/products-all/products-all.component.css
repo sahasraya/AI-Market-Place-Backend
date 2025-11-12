@@ -49,7 +49,11 @@
   padding: 12px 24px;
   font-size: 15px;
   font-weight: 600;
-  background: linear-gradient(135deg, var(--primary-color, #1976d2), var(--secondary-color, #2196f3));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color, #1976d2),
+    var(--secondary-color, #2196f3)
+  );
   color: white;
   border: none;
   border-radius: 8px;
@@ -145,7 +149,11 @@
 }
 
 .products-table thead {
-  background: linear-gradient(135deg, var(--primary-color, #1976d2) 0%, var(--secondary-color, #2196f3) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color, #1976d2) 0%,
+    var(--secondary-color, #2196f3) 100%
+  );
   color: white;
 }
 
@@ -172,7 +180,7 @@
 }
 
 .products-table td {
-  padding: 16px 20px;
+  padding: 5px 15px;
   color: #424242;
   vertical-align: middle;
 }
@@ -484,7 +492,11 @@
 .review-total {
   display: inline-block;
   padding: 4px 12px;
-  background: linear-gradient(135deg, var(--primary-color, #1976d2), var(--secondary-color, #2196f3));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color, #1976d2),
+    var(--secondary-color, #2196f3)
+  );
   color: white;
   border-radius: 15px;
   font-size: 12px;
@@ -622,7 +634,11 @@
   justify-content: center;
   gap: 8px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, var(--primary-color, #1976d2), var(--secondary-color, #2196f3));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color, #1976d2),
+    var(--secondary-color, #2196f3)
+  );
   color: white;
   border: none;
   border-radius: 8px;

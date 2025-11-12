@@ -41,7 +41,6 @@
 .mainheading .material-icons {
   font-size: 36px;
 }
- 
 
 /* ==================== TABLE CONTAINER ==================== */
 .table-container {
@@ -102,7 +101,7 @@
 }
 
 .categories-table td {
-  padding: 16px 20px;
+  padding: 5px 15px;
   color: #424242;
 }
 

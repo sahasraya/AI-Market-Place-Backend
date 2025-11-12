@@ -1,42 +1,87 @@
+/* ==================== MAIN LAYOUT ==================== */
 .main-layout {
   display: flex;
   min-height: 100vh;
-  background-color: var(--background-color);
-  color: var(--text-color);
-  font-family: var(--font-family);
+  position: relative;
+  overflow: hidden;
 }
 
-/* Left sidebar */
+/* ==================== SIDE MENU ==================== */
 .side-menu {
-  width: 250px; /* adjust as needed */
-  background-color: var(--primary-color);
-  color: #fff;
-  box-shadow: var(--shadow-light);
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
+  width: 260px;
+  flex-shrink: 0;
+  position: sticky;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  z-index: 100;
+  background: white;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
-/* Main content on the right */
+/* ==================== MAIN CONTENT ==================== */
 .main-content {
   flex: 1;
-  padding: 2rem;
-  background-color: var(--card-bg-color);
-  overflow-y: auto;
+  position: relative;
+  z-index: 50;
+  min-width: 0;
+  transition: all 0.3s ease;
+  overflow-x: hidden;
 }
 
-/* Responsive behavior */
-@media (max-width: 768px) {
-  .main-layout {
-    flex-direction: column;
+/* ==================== WHEN DRAWER IS OPEN ==================== */
+/* This class will be added dynamically when drawer opens */
+.main-layout.drawer-open .main-content {
+  margin-right: 500px; /* Width of your drawer */
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 1400px) {
+  .main-layout.drawer-open .main-content {
+    margin-right: 450px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .main-layout.drawer-open .main-content {
+    margin-right: 400px;
+  }
+}
+
+@media (max-width: 992px) {
+  .side-menu {
+    width: 220px;
   }
 
+  .main-layout.drawer-open .main-content {
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 768px) {
   .side-menu {
-    width: 100%;
-    background-color: white;
+    position: fixed;
+    left: -220px;
+    transition: left 0.3s ease;
+  }
+
+  .side-menu.mobile-open {
+    left: 0;
   }
 
   .main-content {
-    padding: 1rem;
+    width: 100%;
+  }
+
+  .main-layout.drawer-open .main-content {
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .side-menu {
+    width: 200px;
+    left: -200px;
   }
 }

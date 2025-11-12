@@ -2,7 +2,6 @@
     <!-- Header Section -->
     <div class="header-section">
         <h1 class="mainheading">
-            <span class="material-icons">category</span>
             Categories Management
         </h1>
         <button class="createnewbtn" (click)="openCreatePopup()">
@@ -24,7 +23,6 @@
             <tbody>
                 <tr *ngFor="let category of categories" class="table-row">
                     <td class="category-name">
-                        <span class="material-icons category-icon">category</span>
                         {{ category.categoryName }}
                     </td>
                     <td>{{ category.createdDate | date: 'MMM dd, yyyy' }}</td>
@@ -71,15 +69,16 @@
                         Category Name *
                     </label>
                     <input type="text" id="categoryName" formControlName="categoryName"
-                        placeholder="Enter category name (e.g., Electronics, Clothing, Food)" 
-                        class="form-control"
+                        placeholder="Enter category name (e.g., Electronics, Clothing, Food)" class="form-control"
                         [class.error]="categoryForm.get('categoryName')?.invalid && categoryForm.get('categoryName')?.touched"
                         [class.success]="categoryForm.get('categoryName')?.valid && categoryForm.get('categoryName')?.touched">
                     <div class="error-message"
                         *ngIf="categoryForm.get('categoryName')?.invalid && categoryForm.get('categoryName')?.touched">
                         <span class="material-icons">error</span>
-                        <span *ngIf="categoryForm.get('categoryName')?.errors?.['required']">Category name is required</span>
-                        <span *ngIf="categoryForm.get('categoryName')?.errors?.['minlength']">Category name must be at least 2 characters</span>
+                        <span *ngIf="categoryForm.get('categoryName')?.errors?.['required']">Category name is
+                            required</span>
+                        <span *ngIf="categoryForm.get('categoryName')?.errors?.['minlength']">Category name must be at
+                            least 2 characters</span>
                     </div>
                 </div>
 

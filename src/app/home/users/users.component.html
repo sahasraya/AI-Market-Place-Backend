@@ -2,7 +2,6 @@
     <!-- Header Section -->
     <div class="header-section">
         <h1 class="mainheading">
-            <span class="material-icons">people</span>
             User Management
         </h1>
     </div>
@@ -11,11 +10,8 @@
     <div class="search-section">
         <div class="search-box">
             <span class="material-icons">search</span>
-            <input type="text" 
-                   placeholder="Search users by name, email, or designation..." 
-                   [(ngModel)]="searchText"
-                   (input)="onSearch()"
-                   class="search-input">
+            <input type="text" placeholder="Search users by name, email, or designation..." [(ngModel)]="searchText"
+                (input)="onSearch()" class="search-input">
         </div>
     </div>
 
@@ -26,17 +22,16 @@
                 <tr>
                     <th>User</th>
                     <th>Designation</th>
-                    <th>About Me</th> 
+                    <th>About Me</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let user of filteredUsers" class="table-row" [class.disabled-user]="user.status === 'disabled'">
+                <tr *ngFor="let user of filteredUsers" class="table-row"
+                    [class.disabled-user]="user.status === 'disabled'">
                     <td class="user-info">
-                        <div class="user-avatar">
-                            {{ user.name.charAt(0).toUpperCase() }}
-                        </div>
+
                         <div class="user-details">
                             <div class="user-name">{{ user.name }}</div>
                             <div class="user-email">{{ user.email }}</div>
@@ -56,9 +51,10 @@
                     <td>
                         <div class="about-text">{{ user.aboutMe }}</div>
                     </td>
-                    
+
                     <td>
-                        <span class="status-badge" [class.active]="user.status === 'active'" [class.disabled]="user.status === 'disabled'">
+                        <span class="status-badge" [class.active]="user.status === 'active'"
+                            [class.disabled]="user.status === 'disabled'">
                             {{ user.status }}
                         </span>
                     </td>
@@ -70,9 +66,10 @@
                             <button class="action-btn reviews" (click)="seeAllReviews(user)" title="See Reviews">
                                 <span class="material-icons">rate_review</span>
                             </button>
-                            <button class="action-btn toggle" (click)="toggleUserStatus(user)" 
-                                    [title]="user.status === 'active' ? 'Disable User' : 'Enable User'">
-                                <span class="material-icons">{{ user.status === 'active' ? 'block' : 'check_circle' }}</span>
+                            <button class="action-btn toggle" (click)="toggleUserStatus(user)"
+                                [title]="user.status === 'active' ? 'Disable User' : 'Enable User'">
+                                <span class="material-icons">{{ user.status === 'active' ? 'block' : 'check_circle'
+                                    }}</span>
                             </button>
                             <button class="action-btn delete" (click)="removeUser(user.id)" title="Remove User">
                                 <span class="material-icons">delete</span>
@@ -165,13 +162,15 @@
                         <div class="rating-item">
                             <span class="rating-label">Overall:</span>
                             <div class="stars">
-                                <span *ngFor="let star of getStars(review.overallExperience)" class="material-icons">{{ star }}</span>
+                                <span *ngFor="let star of getStars(review.overallExperience)" class="material-icons">{{
+                                    star }}</span>
                             </div>
                         </div>
                         <div class="rating-item">
                             <span class="rating-label">Efficiency:</span>
                             <div class="stars">
-                                <span *ngFor="let star of getStars(review.efficiencyRating)" class="material-icons">{{ star }}</span>
+                                <span *ngFor="let star of getStars(review.efficiencyRating)" class="material-icons">{{
+                                    star }}</span>
                             </div>
                         </div>
                     </div>
@@ -190,15 +189,9 @@
         </div>
     </div>
 
-    <app-product
-        [product]="selectedProduct"
-        [visible]="showProductPopup"
-        (close)="closeProductPopup()">
+    <app-product [product]="selectedProduct" [visible]="showProductPopup" (close)="closeProductPopup()">
     </app-product>
 
-    <app-review
-        [review]="selectedReview"
-        [visible]="showReviewPopup"
-        (close)="closeReviewPopup()">
+    <app-review [review]="selectedReview" [visible]="showReviewPopup" (close)="closeReviewPopup()">
     </app-review>
 </div>

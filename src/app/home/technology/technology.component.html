@@ -2,7 +2,6 @@
     <!-- Header Section -->
     <div class="header-section">
         <h1 class="mainheading">
-            <span class="material-icons">engineering</span>
             Technologies Management
         </h1>
         <button class="createnewbtn" (click)="openCreatePopup()">
@@ -24,7 +23,6 @@
             <tbody>
                 <tr *ngFor="let technology of technologies" class="table-row">
                     <td class="technology-name">
-                        <span class="material-icons technology-icon">engineering</span>
                         {{ technology.technologyName }}
                     </td>
                     <td>{{ technology.createdDate | date: 'MMM dd, yyyy' }}</td>
@@ -71,15 +69,16 @@
                         Technology Name *
                     </label>
                     <input type="text" id="technologyName" formControlName="technologyName"
-                        placeholder="Enter technology name (e.g., Angular, React, Node.js)" 
-                        class="form-control"
+                        placeholder="Enter technology name (e.g., Angular, React, Node.js)" class="form-control"
                         [class.error]="technologyForm.get('technologyName')?.invalid && technologyForm.get('technologyName')?.touched"
                         [class.success]="technologyForm.get('technologyName')?.valid && technologyForm.get('technologyName')?.touched">
                     <div class="error-message"
                         *ngIf="technologyForm.get('technologyName')?.invalid && technologyForm.get('technologyName')?.touched">
                         <span class="material-icons">error</span>
-                        <span *ngIf="technologyForm.get('technologyName')?.errors?.['required']">Technology name is required</span>
-                        <span *ngIf="technologyForm.get('technologyName')?.errors?.['minlength']">Technology name must be at least 2 characters</span>
+                        <span *ngIf="technologyForm.get('technologyName')?.errors?.['required']">Technology name is
+                            required</span>
+                        <span *ngIf="technologyForm.get('technologyName')?.errors?.['minlength']">Technology name must
+                            be at least 2 characters</span>
                     </div>
                 </div>
 

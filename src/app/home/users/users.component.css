@@ -126,7 +126,7 @@
 }
 
 .users-table td {
-  padding: 16px 20px;
+  padding: 5px 15px;
   color: #424242;
   vertical-align: top;
 }
@@ -755,7 +755,8 @@
   gap: 12px;
 }
 
-.detail-section h3, .detail-section h4 {
+.detail-section h3,
+.detail-section h4 {
   margin: 0;
   display: flex;
   align-items: center;
@@ -839,7 +840,8 @@
   margin-bottom: 4px;
 }
 
-.detail-item p, .detail-item a {
+.detail-item p,
+.detail-item a {
   margin: 0;
   font-size: 14px;
   color: #616161;
