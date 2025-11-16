@@ -235,9 +235,7 @@
 }
 
 .product-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  
   transition: all 0.2s ease;
 }
 
@@ -250,10 +248,7 @@
   color: #4caf50;
 }
 
-.product-name {
-  font-weight: 500;
-}
-
+ 
 .clickable {
   cursor: pointer;
 }
@@ -475,6 +470,8 @@
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   z-index: 1001;
+  max-height: 600px;
+  overflow-y: auto;
   opacity: 0;
   transition: all 0.3s ease;
 }
@@ -614,18 +611,7 @@
   font-size: 18px;
 }
 
-/* ==================== RESPONSIVE DESIGN ==================== */
-@media (max-width: 1200px) {
-  .reviews-table {
-    font-size: 13px;
-  }
-
-  .reviews-table th,
-  .reviews-table td {
-    padding: 12px 16px;
-  }
-}
-
+ 
 @media (max-width: 768px) {
   .reviews-container {
     padding: 20px;

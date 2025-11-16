@@ -12,7 +12,7 @@
 
     <!-- Categories Table -->
     <div class="table-container">
-        <table class="categories-table">
+        <table class="categories-table" *ngIf="categories.length > 0">
             <thead>
                 <tr>
                     <th>Category Name</th>
@@ -26,13 +26,12 @@
                         {{ category.categoryName }}
                     </td>
                     <td>{{ category.createdDate | date: 'MMM dd, yyyy' }}</td>
-
                     <td>
                         <div class="action-buttons">
                             <button class="action-btn edit" (click)="editCategory(category)" title="Edit">
                                 <span class="material-icons">edit</span>
                             </button>
-                            <button class="action-btn delete" (click)="deleteCategory(category.id)" title="Delete">
+                            <button class="action-btn delete" (click)="deleteCategory(category.categoryid)" title="Delete">
                                 <span class="material-icons">delete</span>
                             </button>
                         </div>

@@ -57,11 +57,7 @@ export class SideMenuComponent {
       route: '/home/reviews-all'
     },
 
-    {
-      label: 'Settings',
-      icon: 'settings', // Settings gear icon
-      route: '/home/settings'
-    },
+    
   ];
 
   constructor(private router: Router) {

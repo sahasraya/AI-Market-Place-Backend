@@ -11,7 +11,6 @@ import { CategoryComponent } from './home/category/category.component';
 import { UsersComponent } from './home/users/users.component';
 import { ProductsAllComponent } from './home/products-all/products-all.component';
 import { ReviewsAllComponent } from './home/reviews-all/reviews-all.component';
-import { SettingsComponent } from './home/settings/settings.component';
 import { AddNewProductComponent } from './home/add-new-product/add-new-product.component';
 
 export const routes: Routes = [
@@ -77,32 +76,13 @@ export const routes: Routes = [
         path:'reviews-all',
         component: ReviewsAllComponent,
       },
-
-       {
-        path:'settings',
-        component: SettingsComponent,
-      },
-
-      
+   
        {
         path:'add-new-product',
         component: AddNewProductComponent,
       },
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 
    
     ]
   },

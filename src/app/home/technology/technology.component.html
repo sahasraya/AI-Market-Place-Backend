@@ -12,7 +12,7 @@
 
     <!-- Technologies Table -->
     <div class="table-container">
-        <table class="technologies-table">
+        <table class="technologies-table" *ngIf="technologies.length > 0">
             <thead>
                 <tr>
                     <th>Technology Name</th>
@@ -26,13 +26,12 @@
                         {{ technology.technologyName }}
                     </td>
                     <td>{{ technology.createdDate | date: 'MMM dd, yyyy' }}</td>
-
                     <td>
                         <div class="action-buttons">
                             <button class="action-btn edit" (click)="editTechnology(technology)" title="Edit">
                                 <span class="material-icons">edit</span>
                             </button>
-                            <button class="action-btn delete" (click)="deleteTechnology(technology.id)" title="Delete">
+                            <button class="action-btn delete" (click)="deleteTechnology(technology.techknologyid)" title="Delete">
                                 <span class="material-icons">delete</span>
                             </button>
                         </div>

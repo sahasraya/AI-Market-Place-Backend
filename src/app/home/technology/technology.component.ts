@@ -1,9 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { AdminIdAuthService } from '../../services/getuserid.service';
+import { environment } from '../../environments/environment';
+import { HttpClient } from '@angular/common/http';
 
 interface Technology {
   id: number;
+  techknologyid: string;
   technologyName: string;
   createdDate: Date;
 }
@@ -21,12 +25,19 @@ export class TechnologyComponent implements OnInit {
   showCreatePopup = false;
   isSubmitting = false;
   isEditMode = false;
-  currentTechnologyId: number | null = null;
+  currentTechnologyId: string | null = null;
+  adminid: string = "";
+  APIURL = environment.APIURL;
 
-  constructor(private fb: FormBuilder) {}
+  constructor(
+    private fb: FormBuilder,
+    private adminIdAuthService: AdminIdAuthService,
+    private http: HttpClient
+  ) {}
 
   ngOnInit(): void {
     this.initializeForm();
+    this.adminid = this.adminIdAuthService.getAdminId()!;
     this.loadTechnologies();
   }
 
@@ -36,44 +47,34 @@ export class TechnologyComponent implements OnInit {
     });
   }
 
-  loadTechnologies(): void {
-    // Load from localStorage or API
-    const savedTechnologies = localStorage.getItem('technologies');
-    if (savedTechnologies) {
-      this.technologies = JSON.parse(savedTechnologies).map((t: any) => ({
-        ...t,
-        createdDate: new Date(t.createdDate)
-      }));
-    } else {
-      // Sample data
-      this.technologies = [
-        {
-          id: 1,
-          technologyName: 'Angular',
-          createdDate: new Date('2024-01-15'),
-        },
-        {
-          id: 2,
-          technologyName: 'React',
-          createdDate: new Date('2024-02-20'),
-        },
-        {
-          id: 3,
-          technologyName: 'Node.js',
-          createdDate: new Date('2024-03-10'),
-        },
-        {
-          id: 4,
-          technologyName: 'TypeScript',
-          createdDate: new Date('2024-04-05'),
-        }
-      ];
-      this.saveTechnologies();
+  // ✅ Load technologies from API
+  async loadTechnologies(): Promise<void> {
+    if (!this.adminid) {
+      alert('Admin ID not found. Please login again.');
+      return;
     }
-  }
 
-  saveTechnologies(): void {
-    localStorage.setItem('technologies', JSON.stringify(this.technologies));
+    this.http.get(this.APIURL + `get_technologies/${this.adminid}`).subscribe({
+      next: (response: any) => {
+        if (response.message === "Technologies retrieved successfully") {
+          // Map the response to technologies array
+          this.technologies = response.technologies.map((t: any) => ({
+            id: t.id,
+            techknologyid: t.techknologyid,
+            technologyName: t.technologyName,
+            createdDate: new Date(t.createdDate)
+          }));
+        } else {
+          console.log('No technologies found');
+          this.technologies = [];
+        }
+      },
+      error: (error) => {
+        console.error('Error loading technologies:', error);
+        alert("Failed to load technologies. Please try again.");
+        this.technologies = [];
+      }
+    });
   }
 
   openCreatePopup(): void {
@@ -90,63 +91,100 @@ export class TechnologyComponent implements OnInit {
     this.technologyForm.reset();
   }
 
+  // ✅ Edit technology
   editTechnology(technology: Technology): void {
     this.isEditMode = true;
-    this.currentTechnologyId = technology.id;
+    this.currentTechnologyId = technology.techknologyid;
     this.technologyForm.patchValue({
       technologyName: technology.technologyName
     });
     this.showCreatePopup = true;
   }
 
-  onSubmit(): void {
-    if (this.technologyForm.valid) {
-      this.isSubmitting = true;
-
-      // Simulate API call
-      setTimeout(() => {
-        if (this.isEditMode && this.currentTechnologyId !== null) {
-          // Update existing technology
-          const index = this.technologies.findIndex(t => t.id === this.currentTechnologyId);
-          if (index !== -1) {
-            this.technologies[index] = {
-              ...this.technologies[index],
-              technologyName: this.technologyForm.value.technologyName
-            };
-            this.saveTechnologies();
-            alert('Technology updated successfully!');
-          }
-        } else {
-          // Create new technology
-          const newTechnology: Technology = {
-            id: this.technologies.length > 0 ? Math.max(...this.technologies.map(t => t.id)) + 1 : 1,
-            technologyName: this.technologyForm.value.technologyName,
-            createdDate: new Date(),
-          };
-          this.technologies.push(newTechnology);
-          this.saveTechnologies();
-          alert('Technology created successfully!');
-        }
-
-        this.isSubmitting = false;
-        this.closeCreatePopup();
-      }, 1000);
-    } else {
+  // ✅ Submit form (Create or Update)
+  async onSubmit(): Promise<void> {
+    if (!this.technologyForm.valid) {
       // Mark all fields as touched to show validation errors
       Object.keys(this.technologyForm.controls).forEach(key => {
         this.technologyForm.get(key)?.markAsTouched();
       });
+      return;
+    }
+
+    this.isSubmitting = true;
+    const technologyName = this.technologyForm.value.technologyName;
+
+    if (this.isEditMode && this.currentTechnologyId !== null) {
+      // ✅ UPDATE existing technology
+      const formData = new FormData();
+      formData.append("adminid", this.adminid);
+      formData.append("techknologyid", this.currentTechnologyId);
+      formData.append("technologyName", technologyName);
+
+      this.http.post(this.APIURL + 'update_technology', formData).subscribe({
+        next: (response: any) => {
+          this.isSubmitting = false;
+          if (response.message === "Technology updated successfully") {
+            this.closeCreatePopup();
+            this.loadTechnologies();
+          } else {
+            alert(response.message || 'Failed to update technology.');
+          }
+        },
+        error: (error) => {
+          this.isSubmitting = false;
+          console.error('Error updating technology:', error);
+          alert("Failed to update technology. Please try again.");
+        }
+      });
+    } else {
+      // ✅ CREATE new technology
+      const formData = new FormData();
+      formData.append("adminid", this.adminid);
+      formData.append("technologyName", technologyName);
+
+      this.http.post(this.APIURL + 'create_technology', formData).subscribe({
+        next: (response: any) => {
+          this.isSubmitting = false;
+          if (response.message === "Technology created successfully") {
+            this.closeCreatePopup();
+            this.loadTechnologies();
+          } else {
+            alert(response.message || 'Failed to create technology.');
+          }
+        },
+        error: (error) => {
+          this.isSubmitting = false;
+          console.error('Error creating technology:', error);
+          alert("Failed to create technology. Please try again.");
+        }
+      });
     }
   }
 
-  deleteTechnology(id: number): void {
-    const technology = this.technologies.find(t => t.id === id);
+  // ✅ Delete technology
+  deleteTechnology(techknologyid: string): void {
+    const technology = this.technologies.find(t => t.techknologyid === techknologyid);
     if (technology) {
       const confirmed = confirm(`Are you sure you want to delete "${technology.technologyName}"?`);
       if (confirmed) {
-        this.technologies = this.technologies.filter(t => t.id !== id);
-        this.saveTechnologies();
-        alert('Technology deleted successfully!');
+        const formData = new FormData();
+        formData.append("adminid", this.adminid);
+        formData.append("techknologyid", techknologyid);
+
+        this.http.post(this.APIURL + 'delete_technology', formData).subscribe({
+          next: (response: any) => {
+            if (response.message === "Technology deleted successfully") {
+              this.loadTechnologies();
+            } else {
+              alert(response.message || 'Failed to delete technology.');
+            }
+          },
+          error: (error) => {
+            console.error('Error deleting technology:', error);
+            alert("Failed to delete technology. Please try again.");
+          }
+        });
       }
     }
   }

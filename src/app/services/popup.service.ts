@@ -1,42 +1,62 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
+// ✅ Updated Product interface to match database structure
 export interface Product {
-  id: string;
-  userId: string;
-  productImage: string;
-  productName: string;
-  productCategory: string;
-  license: string;
-  technology: string[];
-  website: string;
-  fundingStage: string;
-  useCases: string[];
-  documentationLink: string;
-  productFacebookLink: string;
-  productLinkedInLink: string;
-  founders: string[];
-  baseAIModel: string[];
-  deployment: string[];
-  mediaPreviews: string[];
-  repositories: string[];
-  description: string;
+  // Database fields
+  productid: string;
+  userid: string;
+  productname: string;
+  productimage: string;
+  productcategory: string;
+  productlicense: string;
+  producttechnology: string;
+  productwebsite: string;
+  productfundingstage: string;
+  productusecaseid: string;
+  productfacebook: string;
+  productdocumentation: string;
+  productlinkedin: string;
+  productfounderid: string;
+  productdescription: string;
+  productbaseaimodelid: string;
+  productdeploymentid: string;
+  productrepositoryid: string;
+  productmediaid: string;
+  rating: number;
+  counts: string;
+  createddate: string;
+  
+  // ✅ Arrays populated by API
+  usecasenames?: string[];
+  technologynames?: string[];
+  foundernames?: string[];
+  baseaimodelnames?: string[];
+  deploymentnames?: string[];
+  repositorylinks?: string[];
+  medialinks?: string[];
 }
 
+
+// ✅ Updated Review interface to match database structure
 export interface Review {
   id: string;
-  userId: string;
-  productId: string;
-  productName: string;
-  usageType: 'Commercial' | 'Personal';
-  usageDuration: string;
-  overallExperience: number;
-  efficiencyRating: number;
-  documentationRating: number;
-  usingPaidVersion: boolean;
-  paidVersionRating: number;
-  otherComments: string;
-  createdDate: Date;
+  reviewid: string;
+  userid: string;
+  productid: string;
+  username: string;
+  commercialorpersonal: string;
+  howlong: string;
+  experiencerate: number;
+  efficiencyrate: number;
+  documentationrate: number;
+  paidornot: string;
+  paidrate: number;
+  colorcode: string;
+  comment: string;
+  createddate: string;
+  email: string;
+  code: string;
 }
 
 @Injectable({

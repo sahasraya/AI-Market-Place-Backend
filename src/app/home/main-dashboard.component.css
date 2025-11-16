@@ -37,18 +37,8 @@
 }
 
 /* ==================== RESPONSIVE DESIGN ==================== */
-@media (max-width: 1400px) {
-  .main-layout.drawer-open .main-content {
-    margin-right: 450px;
-  }
-}
-
-@media (max-width: 1200px) {
-  .main-layout.drawer-open .main-content {
-    margin-right: 400px;
-  }
-}
-
+ 
+ 
 @media (max-width: 992px) {
   .side-menu {
     width: 220px;

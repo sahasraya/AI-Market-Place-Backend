@@ -4,6 +4,7 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { environment } from '../../environments/environment';
 import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-log-in',
@@ -21,8 +22,8 @@ export class LogInComponent {
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
-    private route: Router
+    private authService: AuthService,
+    private router: Router,
   ) {
     this.loginFormOtherUser = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -45,41 +46,49 @@ export class LogInComponent {
     return this.loginFormOtherUser.valid;
   }
 
-  async onSubmitLoginDetails(): Promise<void> {
-    this.route.navigate(['/home/dashboard']);
+ async onSubmitLoginDetails(): Promise<void> {
     if (!this.isFormValid) {
+      this.showMessage('Please fill in all required fields correctly.');
       return;
     }
 
     this.isLoading = true;
-    const email = this.loginFormOtherUser.get("email")?.value || '';
-    const password = this.loginFormOtherUser.get("password")?.value || '';
 
-    const formData = new FormData();
-    formData.append("emailaddress", email);
-    formData.append("password", password);
+    const email = this.loginFormOtherUser.get('email')?.value || '';
+    const password = this.loginFormOtherUser.get('password')?.value || '';
 
-    this.http.post(this.APIURL + 'user_log_in', formData).subscribe({
-      next: (response: any) => {
+    this.authService.adminLogin(email, password).subscribe({
+      next: (response) => {
         this.isLoading = false;
-        
-        if (response.message === "Please confirm the email") {
-          this.showMessage('Please confirm your email before logging in.');
-        } else if (response.message === "No user found") {
+
+        if (response.message === 'No user found') {
           this.showMessage('No user found with this email.');
-        } else if (response.message === "Invalid email or password") {
-          this.showMessage('Incorrect password. Please try again.');
-        } else if (response.message === "Login successful") {
-          sessionStorage.setItem('adminid', response.userid);
-          this.route.navigate(['/home/dashboard']);
+        } else if (response.message === 'Invalid email or password') {
+          this.showMessage('Incorrect email or password. Please try again.');
+        } else if (response.message === 'Login successful') {
+          // Store adminid in sessionStorage
+          if (response.adminid) {
+            sessionStorage.setItem('adminid', response.adminid.toString());
+          }
+
+          // Navigate to dashboard
+          this.router.navigate(['/home/use-case']);
+          
+          // Show success message
+          this.showMessage('Login successful! Welcome back.');
         } else {
-          this.showMessage("Unexpected error: " + response.message);
+          this.showMessage('Unexpected error: ' + response.message);
         }
       },
       error: (error) => {
         this.isLoading = false;
         console.error('Login failed:', error);
-        this.showMessage("Server error. Please try again.");
+        
+        if (error.status === 500) {
+          this.showMessage('Server error. Please try again later.');
+        } else {
+          this.showMessage('An error occurred. Please try again.');
+        }
       }
     });
   }

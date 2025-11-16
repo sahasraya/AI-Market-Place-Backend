@@ -11,114 +11,151 @@
     </div>
 
     <div class="popup-body">
+        <img *ngIf="product.productimage" 
+                 [src]="'data:image/jpeg;base64,' + product.productimage" 
+                 [alt]="product.productname" 
+                 class="detail-image">
+                 
         <div class="product-detail">
-            <img [src]="product.productImage" [alt]="product.productName" class="detail-image">
+            <!-- Product Image -->
             
+            <div *ngIf="!product.productimage" class="detail-image-placeholder">
+                <span class="material-icons">image</span>
+            </div>
+            
+            <!-- Product Name & Category -->
             <div class="detail-section">
-                <h3 class="detail-name">{{ product.productName }}</h3>
-                <p class="detail-category">{{ product.productCategory }}</p>
+                <h3 class="detail-name">{{ product.productname }}</h3>
+                <p class="detail-category" *ngIf="product.productcategory">{{ product.productcategory }}</p>
             </div>
 
-            <div class="detail-section">
+            <!-- Description -->
+            <div class="detail-section" *ngIf="product.productdescription">
                 <h4><span class="material-icons">description</span> Description</h4>
-                <p>{{ product.description }}</p>
+                <p>{{ product.productdescription }}</p>
             </div>
 
-            <div class="detail-section">
+            <!-- Technologies -->
+            <div class="detail-section" *ngIf="product.technologynames && product.technologynames.length > 0">
                 <h4><span class="material-icons">code</span> Technologies</h4>
                 <div class="tags">
-                    <span *ngFor="let tech of product.technology" class="tag">{{ tech }}</span>
+                    <span *ngFor="let tech of product.technologynames" class="tag">{{ tech }}</span>
                 </div>
             </div>
 
-            <div class="detail-section">
+            <!-- Use Cases -->
+            <div class="detail-section" *ngIf="product.usecasenames && product.usecasenames.length > 0">
                 <h4><span class="material-icons">lightbulb</span> Use Cases</h4>
                 <div class="tags">
-                    <span *ngFor="let usecase of product.useCases" class="tag">{{ usecase }}</span>
+                    <span *ngFor="let usecase of product.usecasenames" class="tag">{{ usecase }}</span>
                 </div>
             </div>
 
-            <div class="detail-section">
+            <!-- Founders -->
+            <div class="detail-section" *ngIf="product.foundernames && product.foundernames.length > 0">
                 <h4><span class="material-icons">people</span> Founders</h4>
                 <div class="tags">
-                    <span *ngFor="let founder of product.founders" class="tag">{{ founder }}</span>
+                    <span *ngFor="let founder of product.foundernames" class="tag">{{ founder }}</span>
                 </div>
             </div>
 
+            <!-- Details Grid -->
             <div class="detail-grid">
-                <div class="detail-item">
+                <div class="detail-item" *ngIf="product.productlicense">
                     <span class="material-icons">gavel</span>
                     <div>
                         <strong>License</strong>
-                        <p>{{ product.license }}</p>
+                        <p>{{ product.productlicense }}</p>
                     </div>
                 </div>
-                <div class="detail-item">
+                <div class="detail-item" *ngIf="product.productfundingstage">
                     <span class="material-icons">rocket_launch</span>
                     <div>
                         <strong>Funding Stage</strong>
-                        <p>{{ product.fundingStage }}</p>
+                        <p>{{ product.productfundingstage }}</p>
                     </div>
                 </div>
-                <div class="detail-item">
+                <div class="detail-item" *ngIf="product.productwebsite">
                     <span class="material-icons">link</span>
                     <div>
                         <strong>Website</strong>
-                        <a [href]="product.website" target="_blank">{{ product.website }}</a>
+                        <a [href]="product.productwebsite" target="_blank">{{ product.productwebsite }}</a>
                     </div>
                 </div>
-                <div class="detail-item">
+                <div class="detail-item" *ngIf="product.productdocumentation">
                     <span class="material-icons">menu_book</span>
                     <div>
                         <strong>Documentation</strong>
-                        <a [href]="product.documentationLink" target="_blank">View Docs</a>
+                        <a [href]="product.productdocumentation" target="_blank">View Docs</a>
                     </div>
                 </div>
             </div>
 
-            <div class="detail-section">
+            <!-- AI Models -->
+            <div class="detail-section" *ngIf="product.baseaimodelnames && product.baseaimodelnames.length > 0">
                 <h4><span class="material-icons">smart_toy</span> AI Models</h4>
                 <div class="tags">
-                    <span *ngFor="let model of product.baseAIModel" class="tag">{{ model }}</span>
+                    <span *ngFor="let model of product.baseaimodelnames" class="tag">{{ model }}</span>
                 </div>
             </div>
 
-            <div class="detail-section">
+            <!-- Deployment Options -->
+            <div class="detail-section" *ngIf="product.deploymentnames && product.deploymentnames.length > 0">
                 <h4><span class="material-icons">cloud</span> Deployment Options</h4>
                 <div class="tags">
-                    <span *ngFor="let deploy of product.deployment" class="tag">{{ deploy }}</span>
+                    <span *ngFor="let deploy of product.deploymentnames" class="tag">{{ deploy }}</span>
                 </div>
             </div>
 
-            <div class="detail-section">
+            <!-- Repositories -->
+            <div class="detail-section" *ngIf="product.repositorylinks && product.repositorylinks.length > 0">
                 <h4><span class="material-icons">code_blocks</span> Repositories</h4>
                 <div class="links">
-                    <a *ngFor="let repo of product.repositories" [href]="repo" target="_blank" class="link-item">
+                    <a *ngFor="let repo of product.repositorylinks" [href]="repo" target="_blank" class="link-item">
                         <span class="material-icons">link</span>
                         {{ repo }}
                     </a>
                 </div>
             </div>
 
-            <div class="detail-section" *ngIf="product.mediaPreviews && product.mediaPreviews.length > 0">
+            <!-- Media Previews -->
+            <div class="detail-section" *ngIf="product.medialinks && product.medialinks.length > 0">
                 <h4><span class="material-icons">play_circle</span> Media Previews</h4>
                 <div class="links">
-                    <a *ngFor="let media of product.mediaPreviews" [href]="media" target="_blank" class="link-item">
+                    <a *ngFor="let media of product.medialinks" [href]="media" target="_blank" class="link-item">
                         <span class="material-icons">link</span>
                         {{ media }}
                     </a>
                 </div>
             </div>
 
+            <!-- Rating & Review Count -->
+            <div class="detail-section" *ngIf="product.rating || product.counts">
+                <h4><span class="material-icons">star</span> Ratings & Reviews</h4>
+                <div class="rating-info">
+                    <span class="rating">{{ product.rating }}/5</span>
+                    <span class="review-count">({{ product.counts }} reviews)</span>
+                </div>
+            </div>
+
+            <!-- Social Links -->
             <div class="social-section">
-                <a [href]="product.productLinkedInLink" target="_blank" class="social-btn linkedin">
+                <a *ngIf="product.productlinkedin" [href]="product.productlinkedin" target="_blank" class="social-btn linkedin">
                     <span class="material-icons">business</span>
                     LinkedIn
                 </a>
-                <a [href]="product.productFacebookLink" target="_blank" class="social-btn facebook">
+                <a *ngIf="product.productfacebook" [href]="product.productfacebook" target="_blank" class="social-btn facebook">
                     <span class="material-icons">facebook</span>
                     Facebook
                 </a>
+            </div>
+
+            <!-- Created Date -->
+            <div class="detail-section" *ngIf="product.createddate">
+                <p class="created-date">
+                    <span class="material-icons">calendar_today</span>
+                    Created: {{ product.createddate | date: 'MMM dd, yyyy' }}
+                </p>
             </div>
         </div>
     </div>

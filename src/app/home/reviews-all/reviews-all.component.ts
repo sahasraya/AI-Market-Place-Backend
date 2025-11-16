@@ -1,15 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 import { ReviewComponent } from '../../widget/review/review.component';
 import { ProductComponent } from '../../widget/product/product.component';
-import { Review, PopupService } from '../../services/popup.service';
+import { PopupService, Product, Review } from '../../services/popup.service';
 
 interface User {
-  userId: string;
-  userName: string;
+  userid: string;
+  username: string;
   email: string;
-  country: string;
+  designation: string;
+  about: string;
+  linkedin: string;
+  facebook: string;
+  createddate: string;
 }
 
 @Component({
@@ -25,7 +31,7 @@ export class ReviewsAllComponent implements OnInit {
   displayedReviews: Review[] = [];
   
   selectedReview: Review | null = null;
-  selectedProduct: any = null;
+  selectedProduct: Product | null = null;
   selectedUser: User | null = null;
 
   showReviewPopup = false;
@@ -35,203 +41,46 @@ export class ReviewsAllComponent implements OnInit {
   searchText: string = '';
   itemsPerPage: number = 10;
   currentPage: number = 1;
+  isLoading: boolean = false;
+  APIURL = environment.APIURL;
 
-  constructor(private popupService: PopupService) {}
+  constructor(
+    private popupService: PopupService,
+    private http: HttpClient
+  ) {}
 
   ngOnInit(): void {
     this.loadReviews();
-    this.updateDisplayedReviews();
   }
 
-  loadReviews() {
-    // Load all reviews - in production, this would come from your API
-    this.allReviews = [
-      {
-        id: 'REV-001',
-        userId: 'user1',
-        productId: 'prod1',
-        productName: 'AI Assistant Pro',
-        usageType: 'Commercial',
-        usageDuration: '2 to 5 years',
-        overallExperience: 5,
-        efficiencyRating: 4,
-        documentationRating: 3,
-        usingPaidVersion: true,
-        paidVersionRating: 5,
-        otherComments: 'Excellent product! Has significantly improved our customer support efficiency.',
-        createdDate: new Date('2024-10-15')
+  // ✅ Load all reviews from API
+ async loadReviews(): Promise<void> {
+    this.isLoading = true;
+    
+    this.http.get(this.APIURL + 'get_all_reviews').subscribe({
+      next: (response: any) => {
+        if (response.message === "Reviews retrieved successfully") {
+          this.allReviews = response.reviews || [];
+          this.filteredReviews = [...this.allReviews];
+          this.updateDisplayedReviews();
+        } else {
+          this.allReviews = [];
+          this.filteredReviews = [];
+          this.displayedReviews = [];
+        }
+        this.isLoading = false;
       },
-      {
-        id: 'REV-002',
-        userId: 'user2',
-        productId: 'prod2',
-        productName: 'CloudMonitor',
-        usageType: 'Personal',
-        usageDuration: '6 months to 1 year',
-        overallExperience: 4,
-        efficiencyRating: 4,
-        documentationRating: 4,
-        usingPaidVersion: false,
-        paidVersionRating: 0,
-        otherComments: 'Great for monitoring system health and uptime!',
-        createdDate: new Date('2024-11-01')
-      },
-      {
-        id: 'REV-003',
-        userId: 'user3',
-        productId: 'prod3',
-        productName: 'DataAnalyzer',
-        usageType: 'Personal',
-        usageDuration: '1 to 2 years',
-        overallExperience: 5,
-        efficiencyRating: 5,
-        documentationRating: 5,
-        usingPaidVersion: true,
-        paidVersionRating: 5,
-        otherComments: 'Perfect for teaching data science concepts to students.',
-        createdDate: new Date('2024-09-20')
-      },
-      {
-        id: 'REV-004',
-        userId: 'user4',
-        productId: 'prod4',
-        productName: 'CodeOptimizer',
-        usageType: 'Commercial',
-        usageDuration: '3 to 6 months',
-        overallExperience: 3,
-        efficiencyRating: 3,
-        documentationRating: 2,
-        usingPaidVersion: false,
-        paidVersionRating: 0,
-        otherComments: 'Good concept but documentation needs improvement.',
-        createdDate: new Date('2024-11-05')
-      },
-      {
-        id: 'REV-005',
-        userId: 'user5',
-        productId: 'prod5',
-        productName: 'SecureVault',
-        usageType: 'Personal',
-        usageDuration: '1 to 3 months',
-        overallExperience: 4,
-        efficiencyRating: 4,
-        documentationRating: 4,
-        usingPaidVersion: true,
-        paidVersionRating: 4,
-        otherComments: 'Reliable and secure password management solution.',
-        createdDate: new Date('2024-10-28')
-      },
-      // Add more sample reviews for demonstration
-      {
-        id: 'REV-006',
-        userId: 'user6',
-        productId: 'prod6',
-        productName: 'ProjectManager Pro',
-        usageType: 'Commercial',
-        usageDuration: '2 to 5 years',
-        overallExperience: 5,
-        efficiencyRating: 5,
-        documentationRating: 4,
-        usingPaidVersion: true,
-        paidVersionRating: 5,
-        otherComments: 'Best project management tool we\'ve used.',
-        createdDate: new Date('2024-08-15')
-      },
-      {
-        id: 'REV-007',
-        userId: 'user7',
-        productId: 'prod7',
-        productName: 'DesignStudio',
-        usageType: 'Personal',
-        usageDuration: '6 months to 1 year',
-        overallExperience: 4,
-        efficiencyRating: 4,
-        documentationRating: 3,
-        usingPaidVersion: false,
-        paidVersionRating: 0,
-        otherComments: 'Great for learning graphic design basics.',
-        createdDate: new Date('2024-09-10')
-      },
-      {
-        id: 'REV-008',
-        userId: 'user8',
-        productId: 'prod8',
-        productName: 'NetworkMonitor',
-        usageType: 'Commercial',
-        usageDuration: '1 to 2 years',
-        overallExperience: 3,
-        efficiencyRating: 3,
-        documentationRating: 3,
-        usingPaidVersion: true,
-        paidVersionRating: 3,
-        otherComments: 'Decent tool but has occasional connectivity issues.',
-        createdDate: new Date('2024-10-02')
-      },
-      {
-        id: 'REV-009',
-        userId: 'user9',
-        productId: 'prod9',
-        productName: 'EmailCampaigner',
-        usageType: 'Commercial',
-        usageDuration: '3 to 6 months',
-        overallExperience: 5,
-        efficiencyRating: 5,
-        documentationRating: 5,
-        usingPaidVersion: true,
-        paidVersionRating: 5,
-        otherComments: 'Outstanding email marketing platform with great analytics.',
-        createdDate: new Date('2024-11-08')
-      },
-      {
-        id: 'REV-010',
-        userId: 'user10',
-        productId: 'prod10',
-        productName: 'VideoEditor Plus',
-        usageType: 'Personal',
-        usageDuration: '1 to 3 months',
-        overallExperience: 4,
-        efficiencyRating: 4,
-        documentationRating: 4,
-        usingPaidVersion: false,
-        paidVersionRating: 0,
-        otherComments: 'Easy to use for basic video editing needs.',
-        createdDate: new Date('2024-11-12')
-      },
-      {
-        id: 'REV-011',
-        userId: 'user11',
-        productId: 'prod11',
-        productName: 'ChatBot Builder',
-        usageType: 'Commercial',
-        usageDuration: '2 to 5 years',
-        overallExperience: 5,
-        efficiencyRating: 5,
-        documentationRating: 4,
-        usingPaidVersion: true,
-        paidVersionRating: 5,
-        otherComments: 'Excellent for building customer service bots.',
-        createdDate: new Date('2024-07-20')
-      },
-      {
-        id: 'REV-012',
-        userId: 'user12',
-        productId: 'prod12',
-        productName: 'Inventory Tracker',
-        usageType: 'Commercial',
-        usageDuration: '1 to 2 years',
-        overallExperience: 4,
-        efficiencyRating: 4,
-        documentationRating: 3,
-        usingPaidVersion: true,
-        paidVersionRating: 4,
-        otherComments: 'Good inventory management with room for UI improvements.',
-        createdDate: new Date('2024-08-30')
+      error: (error) => {
+        console.error('Error loading reviews:', error);
+        this.isLoading = false;
+        this.allReviews = [];
+        this.filteredReviews = [];
+        this.displayedReviews = [];
       }
-    ];
-
-    this.filteredReviews = [...this.allReviews];
+    });
   }
 
+  // ✅ Search functionality
   onSearch() {
     const search = this.searchText.toLowerCase().trim();
     
@@ -239,12 +88,14 @@ export class ReviewsAllComponent implements OnInit {
       this.filteredReviews = [...this.allReviews];
     } else {
       this.filteredReviews = this.allReviews.filter(review => 
-        review.id.toLowerCase().includes(search) ||
-        review.userId.toLowerCase().includes(search) ||
-        review.productName.toLowerCase().includes(search) ||
-        review.usageType.toLowerCase().includes(search) ||
-        review.usageDuration.toLowerCase().includes(search) ||
-        review.otherComments.toLowerCase().includes(search)
+        review.reviewid?.toLowerCase().includes(search) ||
+        review.userid?.toLowerCase().includes(search) ||
+        review.productid?.toLowerCase().includes(search) ||
+        review.username?.toLowerCase().includes(search) ||
+        review.commercialorpersonal?.toLowerCase().includes(search) ||
+        review.howlong?.toLowerCase().includes(search) ||
+        review.comment?.toLowerCase().includes(search) ||
+        review.email?.toLowerCase().includes(search)
       );
     }
     
@@ -272,18 +123,26 @@ export class ReviewsAllComponent implements OnInit {
     return this.displayedReviews.length < this.filteredReviews.length;
   }
 
+  // ✅ Calculate average rating
   getAverageRating(): string {
     if (this.allReviews.length === 0) return '0.0';
     
-    const sum = this.allReviews.reduce((acc, review) => acc + review.overallExperience, 0);
+    const sum = this.allReviews.reduce((acc, review) => {
+      const rating = typeof review.experiencerate === 'string' 
+        ? parseInt(review.experiencerate) 
+        : review.experiencerate;
+      return acc + (rating || 0);
+    }, 0);
     const average = sum / this.allReviews.length;
     return average.toFixed(1);
   }
 
-  getStars(rating: number): string[] {
+  // ✅ Generate star array for display
+  getStars(rating: number | string): string[] {
+    const numRating = typeof rating === 'string' ? parseInt(rating) : rating;
     const stars: string[] = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
+    const fullStars = Math.floor(numRating);
+    const hasHalfStar = (numRating % 1) >= 0.5;
     
     for (let i = 0; i < fullStars; i++) {
       stars.push('star');
@@ -300,6 +159,7 @@ export class ReviewsAllComponent implements OnInit {
     return stars;
   }
 
+  // ✅ Open review popup
   openReview(review: Review) {
     this.showReviewPopup = false;
     this.selectedReview = null;
@@ -310,55 +170,84 @@ export class ReviewsAllComponent implements OnInit {
     }, 50);
   }
 
-  openProduct(productName: string) {
-    const review = this.allReviews.find(r => r.productName === productName);
-    if (review) {
-      this.showProductPopup = false;
-      this.selectedProduct = null;
-      setTimeout(() => {
-        this.selectedProduct = {
-          id: review.productId,
-          productName: review.productName,
-          productCategory: 'Software',
-          license: 'MIT',
-          technology: ['Angular', 'FastAPI'],
-          fundingStage: 'Series A',
-          description: 'A great example AI software.',
-          productImage: 'https://via.placeholder.com/200x150'
-        };
-        this.showProductPopup = true;
-        this.popupService.openProductPopup(this.selectedProduct);
-      }, 50);
+ // ✅ Open product popup - Fetch product details from API
+async openProduct(productid: string): Promise<void> {
+  const payload = { productid };
+
+  this.http.post(this.APIURL + 'get_product_details', payload).subscribe({
+    next: (response: any) => {
+          console.log('API response:', response);
+
+      if (response.message === "yes") {
+        this.showProductPopup = false;
+        this.selectedProduct = null;
+
+        setTimeout(() => {
+
+          // Map all product details + arrays to selectedProduct
+          this.selectedProduct = {
+            ...response.product,
+            usecasenames: response.useCases || [],
+            baseaimodelnames: response.baseModels || [],
+            deploymentnames: response.deployments || [],
+            foundernames: response.founders || [],
+            repositorylinks: response.repositories || [],
+            medialinks: response.mediaPreviews || []
+          };
+
+          console.log('Mapped product details:', this.selectedProduct);
+
+          // Show the popup
+          this.showProductPopup = true;
+          this.popupService.openProductPopup(this.selectedProduct!);
+        }, 50);
+
+      } else {
+        alert('Product not found');
+      }
+    },
+    error: (error) => {
+      console.error('Error loading product:', error);
+      alert('Failed to load product details');
     }
+  });
+}
+
+  // ✅ Open user popup - Fetch user details from API
+  async openUser(userid: string): Promise<void> {
+    const payload = {
+      userid: userid
+    };
+
+    this.http.post(this.APIURL + 'get_user_details', payload).subscribe({
+      next: (response: any) => {
+        console.log('User API response:', response);
+        
+        if (response.message === "yes") {
+          this.selectedUser = response.user;
+          this.showUserPopup = true;
+        } else {
+          alert('User not found');
+        }
+      },
+      error: (error) => {
+        console.error('Error loading user:', error);
+        alert('Failed to load user details');
+      }
+    });
   }
 
-  openUser(userId: string) {
-    const userDetails: User[] = [
-      { userId: 'user1', userName: 'John Doe', email: 'john@example.com', country: 'Australia' },
-      { userId: 'user2', userName: 'Jane Smith', email: 'jane@example.com', country: 'USA' },
-      { userId: 'user3', userName: 'Mike Johnson', email: 'mike@example.com', country: 'Canada' },
-      { userId: 'user4', userName: 'Sarah Williams', email: 'sarah@example.com', country: 'UK' },
-      { userId: 'user5', userName: 'David Brown', email: 'david@example.com', country: 'Germany' },
-      { userId: 'user6', userName: 'Emma Davis', email: 'emma@example.com', country: 'France' },
-      { userId: 'user7', userName: 'Chris Wilson', email: 'chris@example.com', country: 'Spain' },
-      { userId: 'user8', userName: 'Lisa Anderson', email: 'lisa@example.com', country: 'Italy' },
-      { userId: 'user9', userName: 'Tom Martinez', email: 'tom@example.com', country: 'Brazil' },
-      { userId: 'user10', userName: 'Amy Taylor', email: 'amy@example.com', country: 'Japan' },
-      { userId: 'user11', userName: 'Mark Robinson', email: 'mark@example.com', country: 'India' },
-      { userId: 'user12', userName: 'Jessica Lee', email: 'jessica@example.com', country: 'South Korea' }
-    ];
-    this.selectedUser = userDetails.find(u => u.userId === userId) || null;
-    this.showUserPopup = true;
-  }
-
+  // ✅ Close popups
   closeReviewPopup() {
     this.showReviewPopup = false;
     this.selectedReview = null;
+    this.popupService.closeReviewPopup();
   }
 
   closeProductPopup() {
     this.showProductPopup = false;
     this.selectedProduct = null;
+    this.popupService.closeProductPopup();
   }
 
   closeUserPopup() {
@@ -366,13 +255,28 @@ export class ReviewsAllComponent implements OnInit {
     this.selectedUser = null;
   }
 
-  deleteReview(review: Review) {
-    const confirmed = confirm(`Are you sure you want to delete review "${review.id}"?`);
+  // ✅ Delete review
+async  deleteReview(review: Review): Promise<void> {
+    const confirmed = confirm("Are you sure you want to delete review ?");
     if (confirmed) {
-      this.allReviews = this.allReviews.filter(r => r.id !== review.id);
-      this.filteredReviews = this.filteredReviews.filter(r => r.id !== review.id);
-      this.updateDisplayedReviews();
-      alert(`Review ${review.id} deleted successfully.`);
+      const payload = {
+        userid: review.userid,
+        reviewid: review.reviewid
+      };
+
+      this.http.post(this.APIURL + 'delete_review', payload).subscribe({
+        next: (response: any) => {
+          if (response.message === "deleted") {
+            this.allReviews = this.allReviews.filter(r => r.reviewid !== review.reviewid);
+            this.filteredReviews = this.filteredReviews.filter(r => r.reviewid !== review.reviewid);
+            this.loadReviews();
+          }
+        },
+        error: (error) => {
+          console.error('Error deleting review:', error);
+          alert('Failed to delete review');
+        }
+      });
     }
   }
 }

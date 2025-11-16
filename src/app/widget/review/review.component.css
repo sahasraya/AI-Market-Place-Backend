@@ -94,11 +94,6 @@
   font-size: 22px;
 }
 
-.popup-body {
-  padding: 24px;
-  overflow-y: auto;
-  max-height: calc(85vh - 80px);
-}
 
 /* ==================== REVIEW DETAILS ==================== */
 .review-detail {
@@ -276,22 +271,7 @@
 }
 
 /* ==================== SCROLLBAR ==================== */
-.popup-body::-webkit-scrollbar {
-  width: 6px;
-}
 
-.popup-body::-webkit-scrollbar-track {
-  background: #f5f5f5;
-}
-
-.popup-body::-webkit-scrollbar-thumb {
-  background: var(--primary-color, #1976d2);
-  border-radius: 10px;
-}
-
-.popup-body::-webkit-scrollbar-thumb:hover {
-  background: #1565c0;
-}
 
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {

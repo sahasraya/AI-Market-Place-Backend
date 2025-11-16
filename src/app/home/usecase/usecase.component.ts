@@ -1,9 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { environment } from '../../environments/environment';
+import { HttpClient } from '@angular/common/http';
+import { AdminIdAuthService } from '../../services/getuserid.service';
 
 interface Usecase {
   id: number;
+  usecaseid: string;
   usecaseName: string;
   createdDate: Date;
 }
@@ -21,12 +25,19 @@ export class UsecaseComponent implements OnInit {
   showCreatePopup = false;
   isSubmitting = false;
   isEditMode = false;
-  currentUsecaseId: number | null = null;
+  currentUsecaseId: string | null = null;
+  adminid: string = "";
+  APIURL = environment.APIURL;
 
-  constructor(private fb: FormBuilder) {}
+  constructor(
+    private fb: FormBuilder,
+    private adminIdAuthService: AdminIdAuthService,
+    private http: HttpClient
+  ) {}
 
   ngOnInit(): void {
     this.initializeForm();
+    this.adminid = this.adminIdAuthService.getAdminId()!;
     this.loadUsecases();
   }
 
@@ -36,39 +47,34 @@ export class UsecaseComponent implements OnInit {
     });
   }
 
-  loadUsecases(): void {
-    // Load from localStorage or API
-    const savedUsecases = localStorage.getItem('usecases');
-    if (savedUsecases) {
-      this.usecases = JSON.parse(savedUsecases).map((u: any) => ({
-        ...u,
-        createdDate: new Date(u.createdDate)
-      }));
-    } else {
-      // Sample data
-      this.usecases = [
-        {
-          id: 1,
-          usecaseName: 'User Authentication',
-          createdDate: new Date('2024-01-15'),
-        },
-        {
-          id: 2,
-          usecaseName: 'Payment Processing',
-          createdDate: new Date('2024-02-20'),
-        },
-        {
-          id: 3,
-          usecaseName: 'Inventory Management',
-          createdDate: new Date('2024-03-10'),
-        }
-      ];
-      this.saveUsecases();
+  // ✅ Load use cases from API
+  async loadUsecases(): Promise<void> {
+    if (!this.adminid) {
+      alert('Admin ID not found. Please login again.');
+      return;
     }
-  }
 
-  saveUsecases(): void {
-    localStorage.setItem('usecases', JSON.stringify(this.usecases));
+    this.http.get(this.APIURL + `get_usecases/${this.adminid}`).subscribe({
+      next: (response: any) => {
+        if (response.message === "Use cases retrieved successfully") {
+          // Map the response to usecases array
+          this.usecases = response.usecases.map((u: any) => ({
+            id: u.id,
+            usecaseid: u.usecaseadminid,
+            usecaseName: u.usecaseName,
+            createdDate: new Date(u.createdDate)
+          }));
+        } else {
+          console.log('No use cases found');
+          this.usecases = [];
+        }
+      },
+      error: (error) => {
+        console.error('Error loading use cases:', error);
+        alert("Failed to load use cases. Please try again.");
+        this.usecases = [];
+      }
+    });
   }
 
   openCreatePopup(): void {
@@ -85,63 +91,100 @@ export class UsecaseComponent implements OnInit {
     this.usecaseForm.reset();
   }
 
+  // ✅ Edit use case
   editUsecase(usecase: Usecase): void {
     this.isEditMode = true;
-    this.currentUsecaseId = usecase.id;
+    this.currentUsecaseId = usecase.usecaseid;
     this.usecaseForm.patchValue({
       usecaseName: usecase.usecaseName
     });
     this.showCreatePopup = true;
   }
 
-  onSubmit(): void {
-    if (this.usecaseForm.valid) {
-      this.isSubmitting = true;
-
-      // Simulate API call
-      setTimeout(() => {
-        if (this.isEditMode && this.currentUsecaseId !== null) {
-          // Update existing usecase
-          const index = this.usecases.findIndex(u => u.id === this.currentUsecaseId);
-          if (index !== -1) {
-            this.usecases[index] = {
-              ...this.usecases[index],
-              usecaseName: this.usecaseForm.value.usecaseName
-            };
-            this.saveUsecases();
-            alert('Use case updated successfully!');
-          }
-        } else {
-          // Create new usecase
-          const newUsecase: Usecase = {
-            id: this.usecases.length > 0 ? Math.max(...this.usecases.map(u => u.id)) + 1 : 1,
-            usecaseName: this.usecaseForm.value.usecaseName,
-            createdDate: new Date(),
-          };
-          this.usecases.push(newUsecase);
-          this.saveUsecases();
-          alert('Use case created successfully!');
-        }
-
-        this.isSubmitting = false;
-        this.closeCreatePopup();
-      }, 1000);
-    } else {
+  // ✅ Submit form (Create or Update)
+  async onSubmit(): Promise<void> {
+    if (!this.usecaseForm.valid) {
       // Mark all fields as touched to show validation errors
       Object.keys(this.usecaseForm.controls).forEach(key => {
         this.usecaseForm.get(key)?.markAsTouched();
       });
+      return;
+    }
+
+    this.isSubmitting = true;
+    const usecaseName = this.usecaseForm.value.usecaseName;
+
+    if (this.isEditMode && this.currentUsecaseId !== null) {
+      // ✅ UPDATE existing use case
+      const formData = new FormData();
+      formData.append("adminid", this.adminid);
+      formData.append("usecaseid", this.currentUsecaseId);
+      formData.append("usecaseName", usecaseName);
+
+      this.http.post(this.APIURL + 'update_usecase', formData).subscribe({
+        next: (response: any) => {
+          this.isSubmitting = false;
+          if (response.message === "Use case updated successfully") {
+            this.closeCreatePopup();
+            this.loadUsecases();
+          } else {
+            alert(response.message || 'Failed to update use case.');
+          }
+        },
+        error: (error) => {
+          this.isSubmitting = false;
+          console.error('Error updating use case:', error);
+          alert("Failed to update use case. Please try again.");
+        }
+      });
+    } else {
+      // ✅ CREATE new use case
+      const formData = new FormData();
+      formData.append("adminid", this.adminid);
+      formData.append("usecaseName", usecaseName);
+
+      this.http.post(this.APIURL + 'create_usecase', formData).subscribe({
+        next: (response: any) => {
+          this.isSubmitting = false;
+          if (response.message === "Use case created successfully") {
+            this.closeCreatePopup();
+            this.loadUsecases();
+          } else {
+            alert(response.message || 'Failed to update_usecase use case.');
+          }
+        },
+        error: (error) => {
+          this.isSubmitting = false;
+          console.error('Error creating use case:', error);
+          alert("Failed to create use case. Please try again.");
+        }
+      });
     }
   }
 
-  deleteUsecase(id: number): void {
-    const usecase = this.usecases.find(u => u.id === id);
+  // ✅ Delete use case
+  async deleteUsecase(usecaseid: string): Promise<void> {
+    const usecase = this.usecases.find(u => u.usecaseid === usecaseid);
     if (usecase) {
       const confirmed = confirm(`Are you sure you want to delete "${usecase.usecaseName}"?`);
       if (confirmed) {
-        this.usecases = this.usecases.filter(u => u.id !== id);
-        this.saveUsecases();
-        alert('Use case deleted successfully!');
+        const formData = new FormData();
+        formData.append("adminid", this.adminid);
+        formData.append("usecaseid", usecaseid);
+
+        this.http.post(this.APIURL + 'delete_usecase', formData).subscribe({
+          next: (response: any) => {
+            if (response.message === "Use case deleted successfully") {
+              this.loadUsecases();
+            } else {
+              alert(response.message || 'Failed to delete use case.');
+            }
+          },
+          error: (error) => {
+            console.error('Error deleting use case:', error);
+            alert("Failed to delete use case. Please try again.");
+          }
+        });
       }
     }
   }

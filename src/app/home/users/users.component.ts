@@ -1,9 +1,11 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 import { ProductComponent } from '../../widget/product/product.component';
 import { ReviewComponent } from '../../widget/review/review.component';
-import { PopupService } from '../../services/popup.service';
+import { PopupService, Product, Review } from '../../services/popup.service';
 
 interface User {
   id: string;
@@ -13,45 +15,8 @@ interface User {
   designation: string;
   aboutMe: string;
   email: string;
-  status: 'active' | 'disabled'; 
-}
-
-interface Product {
-  id: string;
-  userId: string;
-  productImage: string;
-  productName: string;
-  productCategory: string;
-  license: string;
-  technology: string[];
-  website: string;
-  fundingStage: string;
-  useCases: string[];
-  documentationLink: string;
-  productFacebookLink: string;
-  productLinkedInLink: string;
-  founders: string[];
-  baseAIModel: string[];
-  deployment: string[];
-  mediaPreviews: string[];
-  repositories: string[];
-  description: string;
-}
-
-interface Review {
-  id: string;
-  userId: string;
-  productId: string;
-  productName: string;
-  usageType: 'Commercial' | 'Personal';
-  usageDuration: string;
-  overallExperience: number;
-  efficiencyRating: number;
-  documentationRating: number;
-  usingPaidVersion: boolean;
-  paidVersionRating: number;
-  otherComments: string;
-  createdDate: Date;
+  status: 'active' | 'disabled';
+  createdDate?: string;
 }
 
 @Component({
@@ -65,6 +30,7 @@ export class UsersComponent implements OnInit {
   users: User[] = [];
   filteredUsers: User[] = [];
   searchText: string = '';
+  APIURL = environment.APIURL;
   
   // Drawer states
   showProductsDrawer: boolean = false;
@@ -75,13 +41,16 @@ export class UsersComponent implements OnInit {
   userProducts: Product[] = [];
   displayedProducts: Product[] = [];
   productsPage: number = 1;
-  productsPerPage: number = 3;
+  productsPerPage: number = 10;
+  isLoadingProducts: boolean = false;
   
   // Reviews
   userReviews: Review[] = [];
   displayedReviews: Review[] = [];
-  reviewsPage: number = 1;
-  reviewsPerPage: number = 3;
+  reviewsOffset: number = 0;
+  reviewsLimit: number = 5;
+  hasMoreReviews: boolean = false;
+  isLoadingReviews: boolean = false;
   
   // Popup states
   showProductPopup: boolean = false;
@@ -91,43 +60,33 @@ export class UsersComponent implements OnInit {
   selectedProduct: Product | null = null;
   selectedReview: Review | null = null;
 
-
-   constructor(private cdr: ChangeDetectorRef,private popupService: PopupService) {}
-
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private popupService: PopupService,
+    private http: HttpClient
+  ) {}
 
   ngOnInit() {
-    this.generateSampleData();
-    this.filteredUsers = [...this.users];
+    this.loadAllUsers();
   }
 
-  generateSampleData() {
-    // Generate sample users
-    this.users = [
-       
-      {
-        id: 'user4',
-        name: 'Nimali Jayasinghe',
-        linkedin: 'https://linkedin.com/in/nimali-jayasinghe',
-        facebook: 'https://facebook.com/nimali.jayasinghe',
-        designation: 'Product Manager',
-        aboutMe: 'Driving product strategy and innovation. Bridging the gap between technical teams and business objectives.',
-        email: 'nimali@example.com',
-        status: 'disabled' 
+  // ✅ Load all users from API
+ async loadAllUsers(): Promise<void> {
+    this.http.get(this.APIURL + 'get_all_users').subscribe({
+      next: (response: any) => {
+        if (response.message === "Users retrieved successfully") {
+          this.users = response.users;
+          this.filteredUsers = [...this.users];
+        }
       },
-      {
-        id: 'user5',
-        name: 'Ravindu Bandara',
-        linkedin: 'https://linkedin.com/in/ravindu-bandara',
-        facebook: 'https://facebook.com/ravindu.bandara',
-        designation: 'UI/UX Designer',
-        aboutMe: 'Creating beautiful and intuitive user experiences. Specializing in design systems and user research.',
-        email: 'ravindu@example.com',
-        status: 'active'
+      error: (error) => {
+        console.error('Error loading users:', error);
+        alert('Failed to load users. Please try again.');
       }
-    ];
+    });
   }
 
-  // Search functionality
+  // ✅ Search functionality
   onSearch() {
     if (!this.searchText.trim()) {
       this.filteredUsers = [...this.users];
@@ -142,183 +101,209 @@ export class UsersComponent implements OnInit {
     );
   }
 
-  // User actions
+  // ✅ See all products for a user
   seeAllProducts(user: User) {
     this.selectedUser = user;
-    this.userProducts = this.getAllProducts().filter(p => p.userId === user.id);
     this.productsPage = 1;
-    this.loadProducts();
+    this.userProducts = [];
+    this.displayedProducts = [];
+    this.loadUserProducts(user.id);
     this.showProductsDrawer = true;
     this.showReviewsDrawer = false;
   }
 
+  // ✅ Load user products from API
+async  loadUserProducts(userid: string): Promise<void> {
+    this.isLoadingProducts = true;
+    
+    const payload = {
+      userid: userid,
+      page: this.productsPage,
+      limit: this.productsPerPage
+    };
+
+    this.http.post(this.APIURL + 'get_all_product_details', payload).subscribe({
+      next: (response: any) => {
+        this.isLoadingProducts = false;
+        if (response.message === "yes") {
+          this.userProducts = response.products || [];
+          this.displayedProducts = this.userProducts;
+        } else {
+          this.userProducts = [];
+          this.displayedProducts = [];
+        }
+      },
+      error: (error) => {
+        this.isLoadingProducts = false;
+        console.error('Error loading user products:', error);
+        alert('Failed to load products. Please try again.');
+      }
+    });
+  }
+
+  // ✅ See all reviews for a user
   seeAllReviews(user: User) {
     this.selectedUser = user;
-    this.userReviews = this.getAllReviews().filter(r => r.userId === user.id);
-    this.reviewsPage = 1;
-    this.loadReviews();
+    this.reviewsOffset = 0;
+    this.userReviews = [];
+    this.displayedReviews = [];
+    this.loadUserReviews(user.id, true);
     this.showReviewsDrawer = true;
     this.showProductsDrawer = false;
   }
 
-  toggleUserStatus(user: User) {
-    user.status = user.status === 'active' ? 'disabled' : 'active';
-    console.log(`User ${user.name} status changed to ${user.status}`);
+  // ✅ Load user reviews from API
+ async loadUserReviews(userid: string, reset: boolean = false): Promise<void> {
+    if (reset) {
+      this.isLoadingReviews = true;
+      this.reviewsOffset = 0;
+    }
+
+    const payload = {
+      userid: userid,
+      offset: this.reviewsOffset,
+      limit: this.reviewsLimit
+    };
+
+    this.http.post(this.APIURL + 'get_user_reviews_page', payload).subscribe({
+      next: (response: any) => {
+        if (response.message === "found") {
+          if (reset) {
+            this.userReviews = response.reviews || [];
+            this.displayedReviews = response.reviews || [];
+            this.reviewsOffset = response.limit || this.reviewsLimit;
+          } else {
+            this.userReviews = [...this.userReviews, ...(response.reviews || [])];
+            this.displayedReviews = this.userReviews;
+            this.reviewsOffset += (response.reviews || []).length;
+          }
+          this.hasMoreReviews = response.has_more || false;
+        } else {
+          if (reset) {
+            this.userReviews = [];
+            this.displayedReviews = [];
+            this.hasMoreReviews = false;
+            this.reviewsOffset = 0;
+          }
+        }
+        this.isLoadingReviews = false;
+      },
+      error: (error) => {
+        console.error('Error loading user reviews:', error);
+        if (reset) {
+          this.userReviews = [];
+          this.displayedReviews = [];
+          this.hasMoreReviews = false;
+          this.reviewsOffset = 0;
+        }
+        this.isLoadingReviews = false;
+      }
+    });
   }
 
-  removeUser(userId: string) {
-    if (confirm('Are you sure you want to remove this user? This action cannot be undone.')) {
-      this.users = this.users.filter(u => u.id !== userId);
-      this.filteredUsers = this.filteredUsers.filter(u => u.id !== userId);
-      console.log(`User ${userId} removed`);
+  // ✅ Load more reviews
+  loadMoreReviews() {
+    if (this.selectedUser && !this.isLoadingReviews) {
+      this.loadUserReviews(this.selectedUser.id, false);
     }
   }
 
-  // Products drawer
-  loadProducts() {
-    const startIndex = (this.productsPage - 1) * this.productsPerPage;
-    const endIndex = startIndex + this.productsPerPage;
-    this.displayedProducts = this.userProducts.slice(0, endIndex);
+  // ✅ Toggle user status (Enable/Disable)
+async  toggleUserStatus(user: User):Promise<void> {
+    const newStatus = user.status === 'active' ? 'disabled' : 'active';
+    const action = newStatus === 'disabled' ? 'disable' : 'enable';
+    
+    if (confirm(`Are you sure you want to ${action} ${user.name}?`)) {
+      const payload = {
+        userid: user.id,
+        status: newStatus
+      };
+
+      this.http.post(this.APIURL + 'toggle_user_status', payload).subscribe({
+        next: (response: any) => {
+          if (response.message === "User status updated successfully") {
+            user.status = newStatus;
+            alert(`User ${action}d successfully!`);
+          }
+        },
+        error: (error) => {
+          console.error('Error toggling user status:', error);
+          alert('Failed to update user status. Please try again.');
+        }
+      });
+    }
   }
 
-  loadMoreProducts() {
-    this.productsPage++;
-    this.loadProducts();
+  // ✅ Remove user
+ async removeUser(userid: string) :Promise<void> {
+    const user = this.users.find(u => u.id === userid);
+    if (user && confirm(`Are you sure you want to remove ${user.name}? This action cannot be undone.`)) {
+      const payload = {
+        userid: userid
+      };
+
+      this.http.post(this.APIURL + 'remove_user', payload).subscribe({
+        next: (response: any) => {
+          if (response.message === "User removed successfully") {
+            this.users = this.users.filter(u => u.id !== userid);
+            this.filteredUsers = this.filteredUsers.filter(u => u.id !== userid);
+            alert('User removed successfully!');
+          }
+        },
+        error: (error) => {
+          console.error('Error removing user:', error);
+          alert('Failed to remove user. Please try again.');
+        }
+      });
+    }
   }
 
-  get hasMoreProducts(): boolean {
-    return this.displayedProducts.length < this.userProducts.length;
-  }
-
- openProductPopup(product: Product) {
-    console.log('🟡 Users Component: Opening product popup');
-    console.log('🟡 Product:', product);
+  // ✅ Open product popup
+  openProductPopup(product: Product) {
+  
+    this.selectedProduct = product;
+    this.showProductPopup = true;
     this.popupService.openProductPopup(product);
   }
- openReviewPopup(review: Review) {
+
+  // ✅ Open review popup
+  openReviewPopup(review: Review) {
     console.log('🟡 Users Component: Opening review popup');
     console.log('🟡 Review:', review);
-    this.showReviewPopup=true
+    this.selectedReview = review;
+    this.showReviewPopup = true;
     this.popupService.openReviewPopup(review);
   }
-  // Close product popup
+
+  // ✅ Close product popup
   closeProductPopup() {
     this.showProductPopup = false;
     this.selectedProduct = null;
+    this.popupService.closeProductPopup();
   }
 
-  // Reviews drawer
-  loadReviews() {
-    const startIndex = (this.reviewsPage - 1) * this.reviewsPerPage;
-    const endIndex = startIndex + this.reviewsPerPage;
-    this.displayedReviews = this.userReviews.slice(0, endIndex);
-  }
-
-  loadMoreReviews() {
-    this.reviewsPage++;
-    this.loadReviews();
-  }
-
-  get hasMoreReviews(): boolean {
-    return this.displayedReviews.length < this.userReviews.length;
-  }
-
-  // Open review popup - Pass entire review object
-
-
-  // Close review popup
+  // ✅ Close review popup
   closeReviewPopup() {
     this.showReviewPopup = false;
     this.selectedReview = null;
+    this.popupService.closeReviewPopup();
   }
 
-  // Close drawers
+  // ✅ Close drawers
   closeDrawer() {
     this.showProductsDrawer = false;
     this.showReviewsDrawer = false;
     this.selectedUser = null;
   }
 
-  // Get all products
-  getAllProducts(): Product[] {
-    return [
-      {
-        id: 'prod1',
-        userId: 'user5',
-        productImage: 'https://via.placeholder.com/300x200?text=AI+Assistant',
-        productName: 'AI Assistant Pro',
-        productCategory: 'Artificial Intelligence',
-        license: 'MIT',
-        technology: ['Python', 'TensorFlow', 'FastAPI'],
-        website: 'https://aiassistant.com',
-        fundingStage: 'Series A',
-        useCases: ['Customer Support', 'Content Generation', 'Data Analysis'],
-        documentationLink: 'https://docs.aiassistant.com',
-        productFacebookLink: 'https://facebook.com/aiassistant',
-        productLinkedInLink: 'https://linkedin.com/company/aiassistant',
-        founders: ['John Doe', 'Jane Smith'],
-        baseAIModel: ['GPT-4', 'Claude'],
-        deployment: ['Cloud', 'On-Premise'],
-        mediaPreviews: ['https://youtube.com/watch?v=demo1'],
-        repositories: ['https://github.com/aiassistant/core'],
-        description: 'Advanced AI assistant powered by multiple language models for enterprise use.'
-      } 
-    ];
-  }
-
-  // Get all reviews
-  getAllReviews(): Review[] {
-    return [
-      {
-        id: 'rev1',
-        userId: 'user1',
-        productId: 'prod1',
-        productName: 'AI Assistant Pro',
-        usageType: 'Commercial',
-        usageDuration: '2 to 5 years',
-        overallExperience: 5,
-        efficiencyRating: 4,
-        documentationRating: 3,
-        usingPaidVersion: true,
-        paidVersionRating: 5,
-        otherComments: 'Excellent product! Has significantly improved our customer support efficiency. The AI responses are accurate and contextual.',
-        createdDate: new Date('2024-10-15')
-      } ,
-      {
-        id: 'rev3',
-        userId: 'user1',
-        productId: 'prod3',
-        productName: 'DataSync Platform',
-        usageType: 'Commercial',
-        usageDuration: '6 months to 1 year',
-        overallExperience: 4,
-        efficiencyRating: 4,
-        documentationRating: 5,
-        usingPaidVersion: true,
-        paidVersionRating: 4,
-        otherComments: 'Reliable data integration solution. Documentation is comprehensive and helpful.',
-        createdDate: new Date('2024-08-10')
-      }, 
-      {
-        id: 'rev9',
-        userId: 'user1',
-        productId: 'prod1',
-        productName: 'AI Assistant Pro',
-        usageType: 'Commercial',
-        usageDuration: '1 to 2 years',
-        overallExperience: 4,
-        efficiencyRating: 4,
-        documentationRating: 4,
-        usingPaidVersion: true,
-        paidVersionRating: 4,
-        otherComments: 'Very useful for automating customer responses.',
-        createdDate: new Date('2024-06-20')
-      } 
-    ];
-  }
-
-  // Helper method for star ratings
+  // ✅ Helper method for star ratings
   getStars(rating: number): string[] {
-    return Array(5).fill('').map((_, i) => i < rating ? 'star' : 'star_border');
+    const numRating = typeof rating === 'string' ? parseInt(rating) : rating;
+    return Array(5).fill('').map((_, i) => i < numRating ? 'star' : 'star_border');
+  }
+
+  // ✅ Computed properties
+  get hasMoreProducts(): boolean {
+    return false; // Since we're loading all products at once
   }
 }

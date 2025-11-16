@@ -4,7 +4,7 @@
     <h1 class="mainheading">
       All Reviews
     </h1>
-
+   
   </div>
 
   <!-- Search Section -->
@@ -19,15 +19,19 @@
     </div>
   </div>
 
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <span class="spinner"></span>
+    <p>Loading reviews...</p>
+  </div>
+
   <!-- Reviews Table -->
-  <div class="table-container">
+  <div class="table-container" *ngIf="!isLoading">
     <table class="reviews-table">
       <thead>
         <tr>
-          <th>Review ID</th>
           <th>User</th>
-          <th>Product</th>
-          <th>Usage Type</th>
+          <th>Product ID</th>
           <th>Duration</th>
           <th>Experience</th>
           <th>Ratings</th>
@@ -38,37 +42,38 @@
       </thead>
       <tbody>
         <tr *ngFor="let review of displayedReviews" class="table-row">
-          <td class="review-id clickable" (click)="openReview(review)">
-            {{ review.id }}
-          </td>
+         
 
-          <td class="clickable user-cell" (click)="openUser(review.userId)">
-            <span class="user-id">{{ review.userId }}</span>
-          </td>
-
-          <td class="clickable product-cell" (click)="openProduct(review.productName)">
-            <span class="product-name">{{ review.productName }}</span>
-          </td>
-
-          <td>
-            <span class="badge usage-badge">{{ review.usageType }}</span>
-          </td>
-
-          <td>
-            <div class="duration-cell">
-              <span class="material-icons">schedule</span>
-              {{ review.usageDuration }}
+          <td class="clickable user-cell" (click)="openUser(review.userid)">
+            <div class="user-info">
+              <div>
+                <span class="product-name">See User</span>
+              </div>
             </div>
+          </td>
+
+          <td class="clickable product-cell" (click)="openProduct(review.productid)">
+            <span class="product-name">See Product</span>
+          </td>
+
+           
+
+          <td>
+            <div class="duration-cell" *ngIf="review.howlong">
+              <span class="material-icons">schedule</span>
+              {{ review.howlong }}
+            </div>
+            <span *ngIf="!review.howlong">-</span>
           </td>
 
           <td>
             <div class="rating-cell">
               <div class="stars">
-                <span *ngFor="let star of getStars(review.overallExperience)" class="material-icons star">
+                <span *ngFor="let star of getStars(review.experiencerate)" class="material-icons star">
                   {{ star }}
                 </span>
               </div>
-              <span class="rating-value">{{ review.overallExperience }}/5</span>
+              <span class="rating-value">{{ review.experiencerate }}/5</span>
             </div>
           </td>
 
@@ -76,32 +81,34 @@
             <div class="ratings-detail">
               <div class="rating-item" title="Efficiency">
                 <span class="material-icons">speed</span>
-                <span>{{ review.efficiencyRating }}</span>
+                <span>{{ review.efficiencyrate }}</span>
               </div>
               <div class="rating-item" title="Documentation">
                 <span class="material-icons">description</span>
-                <span>{{ review.documentationRating }}</span>
+                <span>{{ review.documentationrate }}</span>
               </div>
             </div>
           </td>
 
           <td>
-            <span class="badge" [ngClass]="review.usingPaidVersion ? 'paid-badge' : 'free-badge'">
-              <span class="material-icons">{{ review.usingPaidVersion ? 'paid' : 'money_off' }}</span>
-              {{ review.usingPaidVersion ? 'Paid' : 'Free' }}
+            <span class="badge" [ngClass]="review.paidornot === '1' ? 'paid-badge' : 'free-badge'">
+              <span class="material-icons">{{ review.paidornot === '1' ? 'paid' : 'money_off' }}</span>
+              {{ review.paidornot === '1' ? 'Paid' : 'Free' }}
             </span>
           </td>
 
           <td>
             <div class="date-cell">
               <span class="material-icons">event</span>
-              {{ review.createdDate | date: 'MMM dd, yyyy' }}
+              {{ review.createddate | date: 'MMM dd, yyyy' }}
             </div>
           </td>
 
           <td>
             <div class="action-buttons">
-
+              <button class="action-btn view" (click)="openReview(review)" title="View Details">
+                <span class="material-icons">visibility</span>
+              </button>
               <button class="action-btn delete" (click)="deleteReview(review)" title="Delete">
                 <span class="material-icons">delete</span>
               </button>
@@ -111,7 +118,7 @@
       </tbody>
     </table>
 
-    <div *ngIf="filteredReviews.length === 0" class="no-data">
+    <div *ngIf="filteredReviews.length === 0 && !isLoading" class="no-data">
       <span class="material-icons">rate_review</span>
       <p>No reviews found</p>
     </div>
@@ -126,17 +133,22 @@
   </div>
 
   <!-- Review Popup -->
-  <app-review *ngIf="selectedReview" [review]="selectedReview" [visible]="showReviewPopup" (close)="closeReviewPopup()">
+  <app-review *ngIf="selectedReview" 
+              [review]="selectedReview" 
+              [visible]="showReviewPopup" 
+              (close)="closeReviewPopup()">
   </app-review>
 
   <!-- Product Popup -->
-  <app-product *ngIf="selectedProduct" [product]="selectedProduct" [visible]="showProductPopup"
-    (close)="closeProductPopup()">
+  <app-product *ngIf="selectedProduct" 
+               [product]="selectedProduct" 
+               [visible]="showProductPopup"
+               (close)="closeProductPopup()">
   </app-product>
 
   <!-- User Popup -->
   <div class="popup-overlay" *ngIf="showUserPopup" (click)="closeUserPopup()"></div>
-  <div class="popup-box" *ngIf="showUserPopup" [class.show]="showUserPopup">
+  <div class="popup-box" *ngIf="showUserPopup && selectedUser" [class.show]="showUserPopup">
     <div class="popup-header">
       <h3>
         <span class="material-icons">person</span>
@@ -147,35 +159,49 @@
       </button>
     </div>
     <div class="popup-content">
-      <div class="user-detail-item">
-        <span class="material-icons">fingerprint</span>
-        <div class="detail-info">
-          <label>User ID</label>
-          <span>{{ selectedUser?.userId }}</span>
-        </div>
-      </div>
+       
       <div class="user-detail-item">
         <span class="material-icons">person</span>
         <div class="detail-info">
           <label>Name</label>
-          <span>{{ selectedUser?.userName }}</span>
+          <span>{{ selectedUser.username }}</span>
         </div>
       </div>
       <div class="user-detail-item">
         <span class="material-icons">email</span>
         <div class="detail-info">
           <label>Email</label>
-          <span>{{ selectedUser?.email }}</span>
+          <span>{{ selectedUser.email }}</span>
         </div>
       </div>
-      <div class="user-detail-item">
-        <span class="material-icons">public</span>
+      <div class="user-detail-item" *ngIf="selectedUser.designation">
+        <span class="material-icons">work</span>
         <div class="detail-info">
-          <label>Country</label>
-          <span>{{ selectedUser?.country }}</span>
+          <label>Designation</label>
+          <span>{{ selectedUser.designation }}</span>
+        </div>
+      </div>
+      <div class="user-detail-item" *ngIf="selectedUser.about">
+        <span class="material-icons">info</span>
+        <div class="detail-info">
+          <label>About</label>
+          <span>{{ selectedUser.about }}</span>
+        </div>
+      </div>
+      <div class="user-detail-item" *ngIf="selectedUser.linkedin">
+        <span class="material-icons">business</span>
+        <div class="detail-info">
+          <label>LinkedIn</label>
+          <a [href]="selectedUser.linkedin" target="_blank">View Profile</a>
+        </div>
+      </div>
+      <div class="user-detail-item" *ngIf="selectedUser.facebook">
+        <span class="material-icons">facebook</span>
+        <div class="detail-info">
+          <label>Facebook</label>
+          <a [href]="selectedUser.facebook" target="_blank">View Profile</a>
         </div>
       </div>
     </div>
-
   </div>
 </div>

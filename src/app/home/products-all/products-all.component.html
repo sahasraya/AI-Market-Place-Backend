@@ -31,7 +31,6 @@
           <th>Product Name</th>
           <th>Category</th>
           <th>License</th>
-          <th>Technology</th>
           <th>Funding Stage</th>
           <th>Reviews</th>
           <th>Actions</th>
@@ -40,39 +39,31 @@
       <tbody>
         <tr *ngFor="let product of filteredProducts" class="table-row">
           <td>
-            <img [src]="product.productImage" [alt]="product.productName" class="product-img"
-              (error)="onImageError($event)" />
+            <img [src]="getProductImage(product)" 
+                 [alt]="product.productname" 
+                 class="product-img"
+                 (error)="onImageError($event)" />
           </td>
           <td class="product-name clickable" (click)="openProduct(product)">
-            {{ product.productName }}
+            {{ product.productname }}
           </td>
           <td>
-            <span class="badge category-badge">{{ product.productCategory }}</span>
+            <span class="badge category-badge">{{ product.productcategory || '-' }}</span>
           </td>
-          <td>{{ product.license }}</td>
+          <td>{{ product.productlicense || '-' }}</td>
+         
           <td>
-            <div class="tech-tags">
-              <span *ngFor="let tech of product.technology.slice(0, 2)" class="tech-tag">
-                {{ tech }}
-              </span>
-              <span *ngIf="product.technology.length > 2" class="tech-more">
-                +{{ product.technology.length - 2 }}
-              </span>
-            </div>
-          </td>
-          <td>
-            <span class="badge funding-badge">{{ product.fundingStage }}</span>
+            <span class="badge funding-badge">{{ product.productfundingstage || '-' }}</span>
           </td>
           <td>
             <button class="btn-icon reviews-btn" (click)="seeAllReviews(product)" title="See Reviews">
-              <span class="review-count">{{ getReviewCount(product.id) }}</span>
+              <span class="material-icons">rate_review</span>
+              <span class="review-count">{{ getReviewCount(product.productid) }}</span>
             </button>
           </td>
           <td>
             <div class="action-buttons">
-              <button class="action-btn edit" (click)="updateProduct(product)" title="Edit">
-                <span class="material-icons">edit</span>
-              </button>
+               
               <button class="action-btn delete" (click)="deleteProduct(product)" title="Delete">
                 <span class="material-icons">delete</span>
               </button>
@@ -92,8 +83,10 @@
   </div>
 
   <!-- Product Popup -->
-  <app-product *ngIf="selectedProduct" [product]="selectedProduct" [visible]="showProductPopup"
-    (close)="closeProductPopup()">
+  <app-product *ngIf="selectedProduct" 
+               [product]="selectedProduct" 
+               [visible]="showProductPopup"
+               (close)="closeProductPopup()">
   </app-product>
 
   <!-- Reviews Drawer -->
@@ -110,53 +103,64 @@
     </div>
 
     <div class="drawer-body" *ngIf="selectedProductForReviews">
+      <!-- Product Info -->
       <div class="drawer-info">
-        <img [src]="selectedProductForReviews.productImage" [alt]="selectedProductForReviews.productName"
-          class="drawer-product-img">
+        <img [src]="getProductImage(selectedProductForReviews)" 
+             [alt]="selectedProductForReviews.productname"
+             class="drawer-product-img"
+             (error)="onImageError($event)">
         <div class="drawer-product-info">
-          <h3>{{ selectedProductForReviews.productName }}</h3>
-          <p>{{ selectedProductForReviews.productCategory }}</p>
-          <span class="review-total">{{ productReviews.length }} Reviews</span>
+          <h3>{{ selectedProductForReviews.productname }}</h3>
+          <p>{{ selectedProductForReviews.productcategory }}</p>
+          <span class="review-total">{{ getReviewCount(selectedProductForReviews.productid) }} Reviews</span>
         </div>
       </div>
 
-      <div class="reviews-list">
+      <!-- Loading State -->
+      <div *ngIf="isLoadingReviews" class="loading-state">
+        <span class="spinner"></span>
+        <p>Loading reviews...</p>
+      </div>
+
+      <!-- Reviews List -->
+      <div class="reviews-list" *ngIf="!isLoadingReviews">
         <div *ngFor="let review of displayedReviews" class="review-card" (click)="openReviewPopup(review)">
           <div class="review-header">
             <div class="review-user">
               <span class="material-icons user-icon">account_circle</span>
               <div>
-                <strong>{{ getUserName(review.userId) }}</strong>
-                <p class="review-date">{{ review.createdDate | date: 'MMM dd, yyyy' }}</p>
+                <strong>{{ getUserName(review) }}</strong>
+                <p class="review-date">{{ review.createddate | date: 'MMM dd, yyyy' }}</p>
               </div>
             </div>
             <div class="review-rating">
               <div class="stars">
-                <span *ngFor="let star of getStars(review.overallExperience)" class="material-icons star">
+                <span *ngFor="let star of getStars(review.experiencerate)" class="material-icons star">
                   {{ star }}
                 </span>
               </div>
-              <span class="rating-text">{{ review.overallExperience }}/5</span>
+              <span class="rating-text">{{ review.experiencerate }}/5</span>
             </div>
           </div>
 
           <div class="review-details">
-            <div class="review-info-item">
+            <div class="review-info-item" *ngIf="review.commercialorpersonal">
               <span class="material-icons">work</span>
-              <span>{{ review.usageType }}</span>
+              <span>{{ review.commercialorpersonal }}</span>
             </div>
-            <div class="review-info-item">
+            <div class="review-info-item" *ngIf="review.howlong">
               <span class="material-icons">schedule</span>
-              <span>{{ review.usageDuration }}</span>
+              <span>{{ review.howlong }}</span>
             </div>
-            <div class="review-info-item" *ngIf="review.usingPaidVersion">
+            <div class="review-info-item" *ngIf="review.paidornot === '1'">
               <span class="material-icons">paid</span>
               <span>Paid Version</span>
             </div>
           </div>
 
-          <p class="review-comment">{{ review.otherComments | slice:0:120 }}{{ review.otherComments.length > 120 ? '...'
-            : '' }}</p>
+          <p class="review-comment" *ngIf="review.comment">
+            {{ review.comment | slice:0:120 }}{{ review.comment.length > 120 ? '...' : '' }}
+          </p>
         </div>
 
         <div *ngIf="productReviews.length === 0" class="no-reviews">
@@ -164,7 +168,7 @@
           <p>No reviews yet for this product</p>
         </div>
 
-        <button *ngIf="hasMoreReviews" class="load-more-btn" (click)="loadMoreReviews()">
+        <button *ngIf="hasMoreReviews && !isLoadingReviews" class="load-more-btn" (click)="loadMoreReviews()">
           <span class="material-icons">expand_more</span>
           Load More Reviews
         </button>
@@ -173,6 +177,9 @@
   </div>
 
   <!-- Review Popup -->
-  <app-review *ngIf="selectedReview" [review]="selectedReview" [visible]="showReviewPopup" (close)="closeReviewPopup()">
+  <app-review *ngIf="selectedReview" 
+              [review]="selectedReview" 
+              [visible]="showReviewPopup" 
+              (close)="closeReviewPopup()">
   </app-review>
 </div>
