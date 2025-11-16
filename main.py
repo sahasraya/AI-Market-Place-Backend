@@ -3221,12 +3221,7 @@ async def get_global_average():
         }, status_code=200)
 
 def calculate_rating_from_reviews(reviews_data, m=10, global_avg=4.0):
-    """
-    Calculate product rating based on review data
-    reviews_data: List of review dictionaries from database
-    m: minimum reviews required for credibility (default: 10)
-    global_avg: average rating across all products (default: 4.0)
-    """
+    
     num_reviews = len(reviews_data)
     
     if num_reviews == 0:

@@ -1,0 +1,105 @@
+<div class="category-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1 class="mainheading">
+            Categories Management
+        </h1>
+        <button class="createnewbtn" (click)="openCreatePopup()">
+            <span class="material-icons">add</span>
+            Add Category
+        </button>
+    </div>
+
+    <!-- Categories Table -->
+    <div class="table-container">
+        <table class="categories-table" *ngIf="categories.length > 0">
+            <thead>
+                <tr>
+                    <th>Category Name</th>
+                    <th>Created Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let category of categories" class="table-row">
+                    <td class="category-name">
+                        {{ category.categoryName }}
+                    </td>
+                    <td>{{ category.createdDate | date: 'MMM dd, yyyy' }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit" (click)="editCategory(category)" title="Edit">
+                                <span class="material-icons">edit</span>
+                            </button>
+                            <button class="action-btn delete" (click)="deleteCategory(category.categoryid)" title="Delete">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div *ngIf="categories.length === 0" class="no-data">
+            <span class="material-icons">category</span>
+            <p>No categories found</p>
+        </div>
+    </div>
+
+    <!-- Create/Update Popup -->
+    <div class="overlay" *ngIf="showCreatePopup" (click)="closeCreatePopup()"></div>
+    <div class="popup" *ngIf="showCreatePopup">
+        <div class="popup-header">
+            <h2 class="popup-title">
+                <span class="material-icons">{{ isEditMode ? 'edit' : 'add_circle' }}</span>
+                {{ isEditMode ? 'Update Category' : 'Create New Category' }}
+            </h2>
+            <button class="close-btn" (click)="closeCreatePopup()" aria-label="Close popup">
+                <span class="material-icons" aria-hidden="true">close</span>
+            </button>
+        </div>
+
+        <div class="popup-body">
+            <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="category-form">
+                <!-- Category Name -->
+                <div class="form-group">
+                    <label for="categoryName">
+                        <span class="material-icons label-icon">category</span>
+                        Category Name *
+                    </label>
+                    <input type="text" id="categoryName" formControlName="categoryName"
+                        placeholder="Enter category name (e.g., Electronics, Clothing, Food)" class="form-control"
+                        [class.error]="categoryForm.get('categoryName')?.invalid && categoryForm.get('categoryName')?.touched"
+                        [class.success]="categoryForm.get('categoryName')?.valid && categoryForm.get('categoryName')?.touched">
+                    <div class="error-message"
+                        *ngIf="categoryForm.get('categoryName')?.invalid && categoryForm.get('categoryName')?.touched">
+                        <span class="material-icons">error</span>
+                        <span *ngIf="categoryForm.get('categoryName')?.errors?.['required']">Category name is
+                            required</span>
+                        <span *ngIf="categoryForm.get('categoryName')?.errors?.['minlength']">Category name must be at
+                            least 2 characters</span>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" (click)="closeCreatePopup()"
+                        [disabled]="isSubmitting">
+                        <span class="material-icons">close</span>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" [disabled]="!isFormValid || isSubmitting">
+                        <span *ngIf="!isSubmitting" class="btn-content">
+                            <span class="material-icons">{{ isEditMode ? 'update' : 'add_circle' }}</span>
+                            {{ isEditMode ? 'Update Category' : 'Create Category' }}
+                        </span>
+                        <span *ngIf="isSubmitting" class="loading-text">
+                            <span class="spinner"></span>
+                            {{ isEditMode ? 'Updating...' : 'Creating...' }}
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
