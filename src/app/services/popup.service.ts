@@ -23,6 +23,7 @@ export interface Product {
   productdeploymentid: string;
   productrepositoryid: string;
   productmediaid: string;
+  xlink: string;
   rating: number;
   counts: string;
   createddate: string;

@@ -445,6 +445,7 @@ async  deleteProduct(product: Product):Promise<void> {
             productbaseaimodelid: p.productbaseaimodelid || '',
             productdeploymentid: p.productdeploymentid || '',
             productrepositoryid: p.productrepositoryid || '',
+            xlink: p.xlink || '',
             productmediaid: p.productmediaid || '',
             rating: p.rating || 0,
             isFeatured: p.isFeatured || 0,

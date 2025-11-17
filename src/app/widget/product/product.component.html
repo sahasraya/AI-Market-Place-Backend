@@ -139,16 +139,35 @@
             </div>
 
             <!-- Social Links -->
-            <div class="social-section">
-                <a *ngIf="product.productlinkedin" [href]="product.productlinkedin" target="_blank" class="social-btn linkedin">
+           <div class="social-section" >
+                <a *ngIf="product.productlinkedin && product.productlinkedin.trim() !== ''" 
+                [href]="product.productlinkedin" 
+                target="_blank" 
+                class="social-btn linkedin">
                     <span class="material-icons">business</span>
                     LinkedIn
                 </a>
-                <a *ngIf="product.productfacebook" [href]="product.productfacebook" target="_blank" class="social-btn facebook">
-                    <span class="material-icons">facebook</span>
-                    Facebook
-                </a>
-            </div>
+    
+                    <a *ngIf="product.productfacebook && product.productfacebook.trim() !== ''" 
+                    [href]="product.productfacebook" 
+                    target="_blank" 
+                    class="social-btn facebook">
+                        <span class="material-icons">facebook</span>
+                        Facebook
+                    </a>
+
+
+                     <a *ngIf="product.xlink && product.xlink.trim() !== ''" 
+                        [href]="product.xlink" 
+                        target="_blank" 
+                        class="social-btn xlink">
+                            X (Twitter)
+                        </a>
+                        
+
+                                        
+                                    
+                 </div>
 
             <!-- Created Date -->
             <div class="detail-section" *ngIf="product.createddate">
