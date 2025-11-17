@@ -113,6 +113,7 @@ async def create_tables():
                         productfacebook VARCHAR(300) DEFAULT NULL,
                         productdocumentation VARCHAR(300) DEFAULT NULL,
                         productlinkedin VARCHAR(300) DEFAULT NULL,
+                        xlink VARCHAR(300) DEFAULT NULL,
                         productfounderid VARCHAR(30) DEFAULT NULL,
                         productdescription VARCHAR(300) DEFAULT NULL,
                         productbaseaimodelid VARCHAR(30) DEFAULT NULL,
@@ -1169,6 +1170,7 @@ async def insert_product(request: Request, productImage: UploadFile = File(None)
         productlinkedin = form.get("productlinkedin", "")
         productdescription = form.get("productdescription", "")
         productdocumentation = form.get("documentationlink", "")  
+        xlink = form.get("xlink", "")  
         isFeatured = int(form.get("isFeatured", 0)) 
 
         # Arrays: manually collect fields like founders[0], repositories[0], etc.
@@ -1206,14 +1208,14 @@ async def insert_product(request: Request, productImage: UploadFile = File(None)
                             productlicense, producttechnology, productwebsite, productfundingstage,
                             productusecaseid, productfacebook, productlinkedin, productdescription,
                             productfounderid, productbaseaimodelid, productdeploymentid, productmediaid,
-                            productdocumentation, productrepositoryid,isFeatured
-                        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                            productdocumentation, productrepositoryid,isFeatured,xlink
+                        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                     """, (
                         userid, productid, name, image_bytes, type_, license_,
                         technology, website, fundingStage, productusecaseid,
                         productfb, productlinkedin, productdescription,
                         productfounderid, productbaseaimodelid, productdeploymentid, productmediaid,
-                        productdocumentation, productrepositoryid,isFeatured
+                        productdocumentation, productrepositoryid,isFeatured,xlink
                     ))
 
                     # ✅ Insert related child data tables
@@ -1521,6 +1523,68 @@ async def get_product_details_basedon_categoryname(request: Request):
 
 
 
+@app.post("/get_product_details_basedon_technology")
+async def get_product_details_basedon_technology(request: Request):
+    try:
+        data = await request.json()
+        newCategory = data.get("newCategory")
+        if not newCategory:
+            raise HTTPException(status_code=400, detail="newCategory is required")
+
+        async with pool.acquire() as conn:
+            async with conn.cursor(aiomysql.DictCursor) as cursor:
+
+                # 1. Fetch all matching usecases
+                await cursor.execute(
+                    "SELECT techknologyadmin, name FROM usecase WHERE name = %s",
+                    (newCategory,)
+                )
+                usecases = await cursor.fetchall()
+
+                if not usecases:
+                    return JSONResponse(content={"message": "No product found"}, status_code=200)
+
+                products = []
+
+                # 2. For each usecase, fetch its products
+                for usecase in usecases:
+                    productusecaseid = usecase["productusecaseid"]
+
+                    await cursor.execute("""
+                        SELECT productid, productimage, productname, productcategory, productusecaseid,userid
+                        FROM product
+                        WHERE productusecaseid = %s
+                    """, (productusecaseid,))
+
+                    prod_list = await cursor.fetchall()
+
+                    for prod in prod_list:
+                        if prod.get("productimage"):
+                            prod["productimage"] = base64.b64encode(prod["productimage"]).decode("utf-8")
+                        prod["useCases"] = [usecase["name"]]  # attach the usecase name
+                        products.append(prod)
+
+                if not products:
+                    return JSONResponse(content={"message": "No product found"}, status_code=200)
+
+                return JSONResponse(content={"message": "yes", "products": products}, status_code=200)
+
+    except Exception as e:
+        print(f"Error fetching product details: {e}")
+        raise HTTPException(status_code=500, detail="An error occurred while fetching product details.")
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
 
 @app.post("/get_product_details_basedon_usecase")
 async def get_product_details_basedon_usecase(request: Request):
@@ -1728,7 +1792,7 @@ async def get_all_product_details_all_admin(request: Request):
                         productfounderid, productdescription,
                         productbaseaimodelid, productdeploymentid,
                         productrepositoryid, productmediaid,status,
-                        rating, counts, createddate,isFeatured
+                        rating, counts, createddate,isFeatured,xlink
                     FROM product   
                     ORDER BY createddate DESC
                     LIMIT %s OFFSET %s
@@ -1867,6 +1931,62 @@ async def get_all_product_details_all_new(request: Request):
         print(f"❌ Error fetching new product details: {e}")
         raise HTTPException(status_code=500, detail="An error occurred while fetching new product details.")
    
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+@app.post("/get_all_product_details_all_featured")
+async def get_all_product_details_all_featured(request: Request):
+    try:
+        # Parse request body to get pagination parameters
+        body = await request.json()
+        page = body.get("page", 1)
+        limit = body.get("limit", 10)
+        
+        # Calculate offset
+        offset = (page - 1) * limit
+        
+        async with pool.acquire() as conn:
+            async with conn.cursor(aiomysql.DictCursor) as cursor:
+                # Get products with LIMIT and OFFSET for pagination
+                await cursor.execute("""
+                    SELECT productid, productimage, productname, productcategory, productusecaseid,isFeatured
+                    FROM product  WHERE status = 1 AND isFeatured = 1
+                    ORDER BY createddate DESC
+                    LIMIT %s OFFSET %s
+                """, (limit, offset))
+                products = await cursor.fetchall()
+
+                if not products:
+                    return JSONResponse(content={"message": "No product found"}, status_code=200)
+
+                # For each product, fetch the usecase name
+                for prod in products:
+                    if prod.get("productusecaseid"):
+                        await cursor.execute(
+                            "SELECT name FROM usecase WHERE productusecaseid = %s",
+                            (prod["productusecaseid"],)
+                        )
+                        usecase_rows = await cursor.fetchall()
+                        prod["usecasenames"] = [row["name"] for row in usecase_rows] if usecase_rows else []
+
+                    # Convert product images to base64
+                    if prod.get("productimage"):
+                        prod["productimage"] = base64.b64encode(prod["productimage"]).decode("utf-8")
+
+                return JSONResponse(content={"message": "yes", "products": products}, status_code=200)
+
+    except Exception as e:
+        print(f"❌ Error fetching new product details: {e}")
+        raise HTTPException(status_code=500, detail="An error occurred while fetching new product details.")
     
     
     
@@ -2383,7 +2503,7 @@ async def get_product_details(request: Request):
                            productlicense, producttechnology, productwebsite, productfundingstage,
                            productfacebook, productlinkedin,productdocumentation,
                            productusecaseid, productfounderid, productbaseaimodelid, productdeploymentid, productmediaid,productrepositoryid,
-                           rating, productdescription, userid, counts
+                           rating, productdescription, userid, counts,xlink
                     FROM product
                     WHERE productid = %s
                 """, (productid,))
