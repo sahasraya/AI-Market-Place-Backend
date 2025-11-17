@@ -37,12 +37,16 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let product of filteredProducts" class="table-row">
+        <tr *ngFor="let product of filteredProducts" class="table-row" [class.inactive-row]="product.status === 0">
           <td>
-            <img [src]="getProductImage(product)" 
-                 [alt]="product.productname" 
-                 class="product-img"
-                 (error)="onImageError($event)" />
+            <div class="product-img-wrapper">
+              <img [src]="getProductImage(product)" [alt]="product.productname" class="product-img"
+                (error)="onImageError($event)" />
+              <span class="featured-badge" *ngIf="product.isFeatured === 1">
+                <span class="material-icons">star</span>
+                Featured
+              </span>
+            </div>
           </td>
           <td class="product-name clickable" (click)="openProduct(product)">
             {{ product.productname }}
@@ -51,7 +55,7 @@
             <span class="badge category-badge">{{ product.productcategory || '-' }}</span>
           </td>
           <td>{{ product.productlicense || '-' }}</td>
-         
+
           <td>
             <span class="badge funding-badge">{{ product.productfundingstage || '-' }}</span>
           </td>
@@ -63,12 +67,19 @@
           </td>
           <td>
             <div class="action-buttons">
-               
+              <button class="action-btn assign" (click)="openAssignPopup(product)" title="Assign to User">
+                <span class="material-icons">person_add</span>
+              </button>
+
               <button class="action-btn delete" (click)="deleteProduct(product)" title="Delete">
                 <span class="material-icons">delete</span>
               </button>
-              <button class="action-btn deactivate" (click)="deactivateProduct(product)" title="Deactivate">
-                <span class="material-icons">block</span>
+              <button class="action-btn" [class.deactivate]="product.status === 0"
+                [class.activate]="product.status === 1" (click)="toggleProductStatus(product)"
+                [title]="product.status === 0 ? 'Deactivate' : 'Activate'">
+                <span class="material-icons">
+                  {{ product.status === 0? 'block' : 'check_circle' }}
+                </span>
               </button>
             </div>
           </td>
@@ -83,10 +94,8 @@
   </div>
 
   <!-- Product Popup -->
-  <app-product *ngIf="selectedProduct" 
-               [product]="selectedProduct" 
-               [visible]="showProductPopup"
-               (close)="closeProductPopup()">
+  <app-product *ngIf="selectedProduct" [product]="selectedProduct" [visible]="showProductPopup"
+    (close)="closeProductPopup()">
   </app-product>
 
   <!-- Reviews Drawer -->
@@ -105,10 +114,8 @@
     <div class="drawer-body" *ngIf="selectedProductForReviews">
       <!-- Product Info -->
       <div class="drawer-info">
-        <img [src]="getProductImage(selectedProductForReviews)" 
-             [alt]="selectedProductForReviews.productname"
-             class="drawer-product-img"
-             (error)="onImageError($event)">
+        <img [src]="getProductImage(selectedProductForReviews)" [alt]="selectedProductForReviews.productname"
+          class="drawer-product-img" (error)="onImageError($event)">
         <div class="drawer-product-info">
           <h3>{{ selectedProductForReviews.productname }}</h3>
           <p>{{ selectedProductForReviews.productcategory }}</p>
@@ -177,9 +184,93 @@
   </div>
 
   <!-- Review Popup -->
-  <app-review *ngIf="selectedReview" 
-              [review]="selectedReview" 
-              [visible]="showReviewPopup" 
-              (close)="closeReviewPopup()">
+  <app-review *ngIf="selectedReview" [review]="selectedReview" [visible]="showReviewPopup" (close)="closeReviewPopup()">
   </app-review>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="popup-overlay" *ngIf="showAssignPopup" (click)="closeAssignPopup()"></div>
+<div class="popup assign-popup" [class.open]="showAssignPopup">
+  <div class="popup-header">
+    <h2 class="popup-title">
+      <span class="material-icons">person_add</span>
+      Assign Product to User
+    </h2>
+    <button class="close-popup-btn" (click)="closeAssignPopup()">
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+
+  <div class="popup-body">
+    <!-- Product Info -->
+    <div class="assign-product-info" *ngIf="selectedProductForAssign">
+      <img [src]="getProductImage(selectedProductForAssign)" [alt]="selectedProductForAssign.productname"
+        class="assign-product-img" (error)="onImageError($event)">
+      <div>
+        <h3>{{ selectedProductForAssign.productname }}</h3>
+        <p class="text-muted">{{ selectedProductForAssign.productcategory }}</p>
+      </div>
+    </div>
+
+    <!-- Search User by Email -->
+    <div class="search-user-section">
+      <label class="search-label">Search User by Email</label>
+      <div class="search-wrapper">
+        <span class="material-icons search-icon">search</span>
+        <input type="email" placeholder="Enter user email..." [(ngModel)]="userSearchEmail"
+          (input)="onUserEmailSearch()" class="search-input" />
+        <span *ngIf="userSearchEmail" class="material-icons clear-icon" (click)="clearUserSearch()">
+          clear
+        </span>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoadingUsers" class="loading-state">
+      <span class="spinner"></span>
+      <p>Loading users...</p>
+    </div>
+
+    <!-- Users List -->
+    <div class="users-list" *ngIf="!isLoadingUsers">
+      <div *ngFor="let user of filteredUsersForAssign" class="user-card">
+        <div class="user-info">
+          <span class="material-icons user-avatar">account_circle</span>
+          <div class="user-details">
+            <strong>{{ user.name }}</strong>
+            <p class="user-email">{{ user.email }}</p>
+            <p class="user-designation" *ngIf="user.designation">{{ user.designation }}</p>
+            <span class="badge" [class.active-badge]="user.status === 'active'"
+              [class.disabled-badge]="user.status === 'disabled'">
+              {{ user.status }}
+            </span>
+          </div>
+        </div>
+        <button class="btn-assign" (click)="assignProductToUser(user)" [disabled]="user.status === 'disabled'">
+          <span class="material-icons">check_circle</span>
+          Assign
+        </button>
+      </div>
+
+      <div *ngIf="filteredUsersForAssign.length === 0 && userSearchEmail" class="no-users">
+        <span class="material-icons">person_off</span>
+        <p>No users found with email: <strong>{{ userSearchEmail }}</strong></p>
+      </div>
+
+      <div *ngIf="filteredUsersForAssign.length === 0 && !userSearchEmail" class="no-users">
+        <span class="material-icons">people</span>
+        <p>Start typing an email to search for users</p>
+      </div>
+    </div>
+  </div>
 </div>

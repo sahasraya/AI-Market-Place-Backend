@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-add-new-product',
@@ -46,7 +47,7 @@ export class AddNewProductComponent implements OnInit {
   ];
 
   // API
-  APIURL = 'http://your-api-url/';
+  APIURL =  environment.APIURL;
   userid: string = '';
   updatingProductId: string = '';
 
@@ -67,19 +68,24 @@ export class AddNewProductComponent implements OnInit {
       name: ['', Validators.required],
       type: ['', Validators.required],
       license: ['', Validators.required],
-      technology: ['', Validators.required],
-      website: ['', [Validators.required, Validators.pattern('https?://.+')]],
+      technology: ['', Validators.required],  // fixed to string (dropdown)
+      website: ['', Validators.required],
       fundingStage: ['', Validators.required],
       productdescription: ['', Validators.required],
-      documentationlink: [''],
-      productfb: [''],
-      productlinkedin: [''],
-      isFeatured: [false],
+
       founders: this.fb.array([this.fb.control('', Validators.required)]),
       baseModels: this.fb.array([this.fb.control('', Validators.required)]),
+      useCases: this.fb.array([]),
+      
       deployments: this.fb.array([this.fb.control('', Validators.required)]),
-      mediaPreviews: this.fb.array([this.fb.control('')]),
-      repositories: this.fb.array([this.fb.control('')])
+
+      mediaPreviews: this.fb.array([this.fb.control(null)]),
+      repositories: this.fb.array([this.fb.control(null)]),
+
+      productfb: [''],
+      documentationlink: [''],
+      productlinkedin: [''],
+      isFeatured: [false], 
     });
   }
 
@@ -235,7 +241,6 @@ export class AddNewProductComponent implements OnInit {
       this.isSubmitting = true;
       
       if (this.isEditMode) {
-        this.updateProduct();
       } else {
         this.createProduct();
       }
@@ -245,100 +250,70 @@ export class AddNewProductComponent implements OnInit {
     }
   }
 
-  createProduct(): void {
-    const formData = new FormData();
-    
-    // Basic fields
-    formData.append('name', this.productAddingForm.get('name')?.value);
-    formData.append('type', this.productAddingForm.get('type')?.value);
-    formData.append('license', this.productAddingForm.get('license')?.value);
-    formData.append('technology', this.productAddingForm.get('technology')?.value);
-    formData.append('website', this.productAddingForm.get('website')?.value);
-    formData.append('fundingStage', this.productAddingForm.get('fundingStage')?.value);
-    formData.append('productdescription', this.productAddingForm.get('productdescription')?.value);
-    formData.append('documentationlink', this.productAddingForm.get('documentationlink')?.value || '');
-    formData.append('productfb', this.productAddingForm.get('productfb')?.value || '');
-    formData.append('productlinkedin', this.productAddingForm.get('productlinkedin')?.value || '');
-    formData.append('isFeatured', this.productAddingForm.get('isFeatured')?.value ? '1' : '0');
-    formData.append('userid', this.userid);
+async createProduct(): Promise<void> {
+  if (!this.productAddingForm.valid) {
+    this.productAddingForm.markAllAsTouched();
+    alert('Please fill in all required fields');
+    return;
+  }
 
-    // Arrays
-    const founders = this.productAddingForm.get('founders')?.value || [];
-    founders.forEach((f: string, i: number) => formData.append(`founders[${i}]`, f));
+  const formData = new FormData();
 
-    const useCases = this.selectedUseCases || [];
-    useCases.forEach((uc: string, i: number) => formData.append(`useCases[${i}]`, uc));
+  // 🔹 Basic fields
+  formData.append('name', this.productAddingForm.get('name')?.value);
+  formData.append('type', this.productAddingForm.get('type')?.value); // category name
+  formData.append('license', this.productAddingForm.get('license')?.value);
+  formData.append('technology', this.productAddingForm.get('technology')?.value); // technology name
+  formData.append('website', this.productAddingForm.get('website')?.value);
+  formData.append('fundingStage', this.productAddingForm.get('fundingStage')?.value);
+  formData.append('productdescription', this.productAddingForm.get('productdescription')?.value);
+  formData.append('documentationlink', this.productAddingForm.get('documentationlink')?.value || '');
+  formData.append('productfb', this.productAddingForm.get('productfb')?.value || '');
+  formData.append('productlinkedin', this.productAddingForm.get('productlinkedin')?.value || '');
+  formData.append('isFeatured', this.productAddingForm.get('isFeatured')?.value ? '1' : '0');
+  formData.append('userid', this.userid);
+  // 🔹 Arrays
+  const appendArray = (key: string, arr: string[]) => {
+    arr.forEach((item, i) => formData.append(`${key}[${i}]`, item));
+  };
 
-    const baseModels = this.productAddingForm.get('baseModels')?.value || [];
-    baseModels.forEach((b: string, i: number) => formData.append(`baseModels[${i}]`, b));
+  appendArray('founders', this.productAddingForm.get('founders')?.value || []);
+  appendArray('useCases', this.selectedUseCases || []);
+  appendArray('baseModels', this.productAddingForm.get('baseModels')?.value || []);
+  appendArray('deployments', this.productAddingForm.get('deployments')?.value || []);
+  appendArray('mediaPreviews', this.productAddingForm.get('mediaPreviews')?.value.filter((m: string) => m) || []);
+  appendArray('repositories', this.productAddingForm.get('repositories')?.value.filter((r: string) => r) || []);
 
-    const deployments = this.productAddingForm.get('deployments')?.value || [];
-    deployments.forEach((d: string, i: number) => formData.append(`deployments[${i}]`, d));
+  // 🔹 Product image
+  if (this.selectedProductFile) {
+    formData.append('productImage', this.selectedProductFile);
+  }
 
-    const mediaPreviews = this.productAddingForm.get('mediaPreviews')?.value.filter((m: string) => m) || [];
-    mediaPreviews.forEach((m: string, i: number) => formData.append(`mediaPreviews[${i}]`, m));
-
-    const repositories = this.productAddingForm.get('repositories')?.value.filter((r: string) => r) || [];
-    repositories.forEach((r: string, i: number) => formData.append(`repositories[${i}]`, r));
-
-    // Image
-    if (this.selectedProductFile) {
-      formData.append('productImage', this.selectedProductFile);
-    }
-
-    this.http.post(this.APIURL + 'insert_product', formData).subscribe({
-      next: (response: any) => {
-        this.isSubmitting = false;
-        if (response.message === 'yes') {
-          alert('Product created successfully!');
-          this.router.navigate(['/home/products-all']);
-        }
-      },
-      error: (error) => {
-        this.isSubmitting = false;
-        console.error('Error creating product:', error);
-        alert('Error creating product');
+  // 🔹 Send to backend
+  this.isSubmitting = true;
+  this.http.post(this.APIURL + 'insert_product', formData).subscribe({
+    next: (response: any) => {
+      this.isSubmitting = false;
+      if (response.message === 'yes') {
+        this.productAddingForm.reset();
+        this.selectedUseCases = [];
+        this.selectedProductFile = null;
+        this.selectedImage = null;
+        this.router.navigate(['/home/products-all']);
+      } else {
+        alert('❌ Failed to create product');
       }
-    });
-  }
-
-  updateProduct(): void {
-    const payload: any = {
-      productid: this.updatingProductId,
-      userid: this.userid,
-      productname: this.productAddingForm.get('name')?.value,
-      productcategory: this.productAddingForm.get('type')?.value,
-      productlicense: this.productAddingForm.get('license')?.value,
-      producttechnology: this.productAddingForm.get('technology')?.value,
-      productwebsite: this.productAddingForm.get('website')?.value,
-      productfundingstage: this.productAddingForm.get('fundingStage')?.value,
-      productdescription: this.productAddingForm.get('productdescription')?.value,
-      productfacebook: this.productAddingForm.get('productfb')?.value,
-      productlinkedin: this.productAddingForm.get('productlinkedin')?.value,
-      documentationlink: this.productAddingForm.get('documentationlink')?.value,
-      isFeatured: this.productAddingForm.get('isFeatured')?.value ? 1 : 0,
-      founders: this.productAddingForm.get('founders')?.value.filter((f: string) => f.trim() !== ''),
-      baseModels: this.productAddingForm.get('baseModels')?.value.filter((b: string) => b.trim() !== ''),
-      deployments: this.productAddingForm.get('deployments')?.value.filter((d: string) => d.trim() !== ''),
-      mediaPreviews: this.productAddingForm.get('mediaPreviews')?.value.filter((m: string) => m && m.trim() !== ''),
-      repositories: this.productAddingForm.get('repositories')?.value.filter((r: string) => r && r.trim() !== ''),
-      useCases: this.selectedUseCases
-    };
-
-    if (this.selectedProductFile) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (reader.result) {
-          const base64String = (reader.result as string).split(',')[1];
-          payload.productimage = base64String;
-          this.sendUpdateRequest(payload);
-        }
-      };
-      reader.readAsDataURL(this.selectedProductFile);
-    } else {
-      this.sendUpdateRequest(payload);
+    },
+    error: (err) => {
+      this.isSubmitting = false;
+      console.error('❌ Error creating product:', err);
+      alert('Error creating product');
     }
-  }
+  });
+}
+
+
+ 
 
   sendUpdateRequest(payload: any): void {
     this.http.post(this.APIURL + 'update_product_details', payload).subscribe({

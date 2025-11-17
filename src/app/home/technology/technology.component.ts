@@ -49,12 +49,9 @@ export class TechnologyComponent implements OnInit {
 
   // ✅ Load technologies from API
   async loadTechnologies(): Promise<void> {
-    if (!this.adminid) {
-      alert('Admin ID not found. Please login again.');
-      return;
-    }
+    
 
-    this.http.get(this.APIURL + `get_technologies/${this.adminid}`).subscribe({
+    this.http.get(this.APIURL + `get_technologies`).subscribe({
       next: (response: any) => {
         if (response.message === "Technologies retrieved successfully") {
           // Map the response to technologies array

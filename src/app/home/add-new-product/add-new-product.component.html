@@ -15,7 +15,7 @@
     <form [formGroup]="productAddingForm" (ngSubmit)="onSubmitProduct()" class="product-form">
 
       <!-- Product Image Preview -->
-      <div class="image-preview-section">
+      <div class="image-preview-section" *ngIf="selectedImage">
         <img [src]="selectedImage || 'https://via.placeholder.com/300x200?text=Product+Image'" alt="Product Preview"
           class="product-preview-image" />
         <div class="image-upload-overlay">

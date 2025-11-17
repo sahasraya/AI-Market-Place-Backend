@@ -49,12 +49,8 @@ export class UsecaseComponent implements OnInit {
 
   // ✅ Load use cases from API
   async loadUsecases(): Promise<void> {
-    if (!this.adminid) {
-      alert('Admin ID not found. Please login again.');
-      return;
-    }
 
-    this.http.get(this.APIURL + `get_usecases/${this.adminid}`).subscribe({
+    this.http.get(this.APIURL + `get_usecases`).subscribe({
       next: (response: any) => {
         if (response.message === "Use cases retrieved successfully") {
           // Map the response to usecases array

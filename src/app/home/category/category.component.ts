@@ -49,12 +49,9 @@ export class CategoryComponent implements OnInit {
 
   // ✅ Load categories from API
   async loadCategories(): Promise<void> {
-    if (!this.adminid) {
-      alert('Admin ID not found. Please login again.');
-      return;
-    }
+    
 
-    this.http.get(this.APIURL + `get_categories/${this.adminid}`).subscribe({
+    this.http.get(this.APIURL + `get_categories`).subscribe({
       next: (response: any) => {
         if (response.message === "Categories retrieved successfully") {
           // Map the response to categories array

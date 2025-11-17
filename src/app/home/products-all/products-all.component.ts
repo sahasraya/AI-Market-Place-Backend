@@ -8,6 +8,21 @@ import { ReviewComponent } from '../../widget/review/review.component';
 import { PopupService, Product, Review } from '../../services/popup.service';
 import { environment } from '../../environments/environment';
 
+
+interface User {
+  id: string;
+  userid: string;
+  name: string;
+  email: string;
+  linkedin: string;
+  facebook: string;
+  designation: string;
+  aboutMe: string;
+  createdDate: string;
+  status: string;
+}
+
+
 @Component({
   selector: 'app-products-all',
   standalone: true,
@@ -39,6 +54,18 @@ export class ProductsAllComponent implements OnInit {
 
   APIURL = environment.APIURL;
 
+
+
+
+
+  showAssignPopup = false;
+  selectedProductForAssign: Product | null = null;
+  users: User[] = [];
+  filteredUsersForAssign: User[] = [];
+  userSearchEmail: string = '';
+  isLoadingUsers = false;
+
+
   constructor(
     private popupService: PopupService,
     private router: Router,
@@ -50,62 +77,6 @@ export class ProductsAllComponent implements OnInit {
   }
 
   // ✅ Load all products
- async loadProducts(): Promise<void> {
-    const body = { page: 1, limit: 100 };
-    
-    this.http.post<{ message: string; products: any[] }>(
-      `${this.APIURL}get_all_product_details_all`,
-      body
-    ).subscribe({
-      next: (response) => {
-        if (response.products && response.products.length > 0) {
-          this.products = response.products.map(p => ({
-            productid: p.productid,
-            userid: p.userid,
-            productname: p.productname,
-            productimage: p.productimage || '',
-            productcategory: p.productcategory || '',
-            productlicense: p.productlicense || '',
-            producttechnology: p.producttechnology || '',
-            productwebsite: p.productwebsite || '',
-            productfundingstage: p.productfundingstage || '',
-            productusecaseid: p.productusecaseid || '',
-            productfacebook: p.productfacebook || '',
-            productdocumentation: p.productdocumentation || '',
-            productlinkedin: p.productlinkedin || '',
-            productfounderid: p.productfounderid || '',
-            productdescription: p.productdescription || '',
-            productbaseaimodelid: p.productbaseaimodelid || '',
-            productdeploymentid: p.productdeploymentid || '',
-            productrepositoryid: p.productrepositoryid || '',
-            productmediaid: p.productmediaid || '',
-            rating: p.rating || 0,
-            counts: p.counts || '0',
-            createddate: p.createddate,
-            usecasenames: p.usecasenames || [],
-            technologynames: p.technologynames || [],
-            foundernames: p.foundernames || [],
-            baseaimodelnames: p.baseaimodelnames || [],
-            deploymentnames: p.deploymentnames || [],
-            repositorylinks: p.repositorylinks || [],
-            medialinks: p.medialinks || []
-          } as Product));
-          
-          this.filteredProducts = [...this.products];
-          
-          // ✅ Load review counts for all products
-          this.loadReviewCounts();
-        } else {
-          console.warn('No products returned from API.');
-          this.filteredProducts = [];
-        }
-      },
-      error: (err) => {
-        console.error('Failed to load products:', err);
-        alert('Failed to load products. Please try again.');
-      }
-    });
-  }
 
   // ✅ Load review counts for all products
 async  loadReviewCounts(): Promise<void> {
@@ -298,11 +269,10 @@ async  deleteProduct(product: Product):Promise<void> {
       
       this.http.post(this.APIURL + 'delete_product', payload).subscribe({
         next: (response: any) => {
-          if (response.message === "Product deleted successfully") {
+          if (response.message === "deleted") {
             this.products = this.products.filter(p => p.productid !== product.productid);
             this.filteredProducts = this.filteredProducts.filter(p => p.productid !== product.productid);
             delete this.reviewCounts[product.productid];
-            alert(`${product.productname} deleted successfully.`);
           }
         },
         error: (error) => {
@@ -318,7 +288,8 @@ async  deleteProduct(product: Product):Promise<void> {
     if (confirm(`Are you sure you want to deactivate ${product.productname}?`)) {
       const payload = { 
         productid: product.productid,
-        status: 'inactive'
+        userid: product.userid,
+       
       };
       
       this.http.post(this.APIURL + 'toggle_product_status', payload).subscribe({
@@ -336,4 +307,203 @@ async  deleteProduct(product: Product):Promise<void> {
       });
     }
   }
+
+
+
+
+
+
+
+
+  openAssignPopup(product: Product): void {
+    this.selectedProductForAssign = product;
+    this.userSearchEmail = '';
+    this.filteredUsersForAssign = [];
+    this.showAssignPopup = true;
+    this.loadAllUsers();
+  }
+
+  // ✅ Close Assign Popup
+  closeAssignPopup(): void {
+    this.showAssignPopup = false;
+    this.selectedProductForAssign = null;
+    this.userSearchEmail = '';
+    this.filteredUsersForAssign = [];
+    this.users = [];
+  }
+
+  // ✅ Load all users from API
+  async loadAllUsers(): Promise<void> {
+    this.isLoadingUsers = true;
+    this.http.get(this.APIURL + 'get_all_users').subscribe({
+      next: (response: any) => {
+        if (response.message === "Users retrieved successfully") {
+          this.users = response.users;
+          this.filteredUsersForAssign = [];
+          this.isLoadingUsers = false;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading users:', error);
+        alert('Failed to load users. Please try again.');
+        this.isLoadingUsers = false;
+      }
+    });
+  }
+
+  // ✅ Search users by email
+  onUserEmailSearch(): void {
+    const searchEmail = this.userSearchEmail.toLowerCase().trim();
+    
+    if (!searchEmail) {
+      this.filteredUsersForAssign = [];
+      return;
+    }
+
+    this.filteredUsersForAssign = this.users.filter(user =>
+      user.email.toLowerCase().includes(searchEmail) ||
+      user.name.toLowerCase().includes(searchEmail)
+    );
+  }
+
+  // ✅ Clear user search
+  clearUserSearch(): void {
+    this.userSearchEmail = '';
+    this.filteredUsersForAssign = [];
+  }
+
+  // ✅ Assign product to user
+  async assignProductToUser(user: User): Promise<void> {
+  if (!this.selectedProductForAssign) {
+    alert('No product selected');
+    return;
+  }
+
+  if (user.status === 'disabled') {
+    alert('Cannot assign product to a disabled user');
+    return;
+  }
+
+  // Show confirmation
+  const confirmMessage = `Are you sure you want to assign "${this.selectedProductForAssign.productname}" to ${user.name} (${user.email})?`;
+  
+  if (confirm(confirmMessage)) {
+    const payload = {
+      productid: this.selectedProductForAssign.productid,
+      userid: user.id  // Use user.id from the User interface
+    };
+
+    this.http.post(this.APIURL + 'assign_product', payload).subscribe({
+      next: (response: any) => {
+        if (response.message === "assigned") {
+          alert(`Product successfully assigned to ${user.name}!\n\nUser ID: ${user.id}\nEmail: ${user.email}`);
+          this.closeAssignPopup();
+          // Optionally reload products to reflect changes
+          // this.loadProducts();
+        } else if (response.message === "already_yours") {
+          alert(`This product already belongs to ${user.name}.`);
+        } else if (response.message === "product_not_found") {
+          alert('Product not found.');
+        } else {
+          alert('Failed to assign product. Please try again.');
+        }
+      },
+      error: (error) => {
+        console.error('Error assigning product:', error);
+        alert('Failed to assign product. Please try again.');
+      }
+    });
+  }
+}
+
+   async loadProducts(): Promise<void> {
+    const body = { page: 1, limit: 100 };
+    
+    this.http.post<{ message: string; products: any[] }>(
+      `${this.APIURL}get_all_product_details_all_admin`,
+      body
+    ).subscribe({
+      next: (response) => {
+
+        if (response.products && response.products.length > 0) {
+          this.products = response.products.map(p => ({
+            productid: p.productid,
+            userid: p.userid,
+            productname: p.productname,
+            productimage: p.productimage || '',
+            productcategory: p.productcategory || '',
+            productlicense: p.productlicense || '',
+            producttechnology: p.producttechnology || '',
+            productwebsite: p.productwebsite || '',
+            productfundingstage: p.productfundingstage || '',
+            productusecaseid: p.productusecaseid || '',
+            productfacebook: p.productfacebook || '',
+            productdocumentation: p.productdocumentation || '',
+            productlinkedin: p.productlinkedin || '',
+            productfounderid: p.productfounderid || '',
+            productdescription: p.productdescription || '',
+            productbaseaimodelid: p.productbaseaimodelid || '',
+            productdeploymentid: p.productdeploymentid || '',
+            productrepositoryid: p.productrepositoryid || '',
+            productmediaid: p.productmediaid || '',
+            rating: p.rating || 0,
+            isFeatured: p.isFeatured || 0,
+            counts: p.counts || '0',
+            status: Number(p.status),
+            createddate: p.createddate,
+            usecasenames: p.usecasenames || [],
+            technologynames: p.technologynames || [],
+            foundernames: p.foundernames || [],
+            baseaimodelnames: p.baseaimodelnames || [],
+            deploymentnames: p.deploymentnames || [],
+            repositorylinks: p.repositorylinks || [],
+            medialinks: p.medialinks || []
+          } as Product));
+          
+          this.filteredProducts = [...this.products];
+          
+         
+          this.loadReviewCounts();
+        } else {
+          console.warn('No products returned from API.');
+          this.filteredProducts = [];
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load products:', err);
+        alert('Failed to load products. Please try again.');
+      }
+    });
+  }
+
+
+ async toggleProductStatus(product: Product): Promise<void> {
+
+  const newStatus = product.status === 1 ? 0 : 1;
+  const action = newStatus === 0 ? 'deactivate' : 'activate';
+
+  if (confirm(`Are you sure you want to ${action} "${product.productname}"?`)) {
+
+    const payload = { 
+      productid: product.productid,
+      userid: product.userid,
+      status: newStatus
+    };
+    
+    this.http.post(this.APIURL + 'toggle_product_status', payload)
+      .subscribe({
+        next: (response: any) => {
+          if (response.message === "Product status updated successfully") {
+            product.status = newStatus;
+          } else {
+            alert('Failed to update product status.');
+          }
+        },
+        error: (error) => {
+          alert('Error updating status.');
+        }
+      });
+  }
+}
+
 }

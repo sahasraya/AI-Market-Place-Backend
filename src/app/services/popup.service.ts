@@ -26,6 +26,8 @@ export interface Product {
   rating: number;
   counts: string;
   createddate: string;
+  status: number;
+  isFeatured: number;
   
   // ✅ Arrays populated by API
   usecasenames?: string[];
@@ -62,6 +64,7 @@ export interface Review {
 @Injectable({
   providedIn: 'root'
 })
+  
 export class PopupService {
   // Product popup state
   private productSubject = new BehaviorSubject<Product | null>(null);
@@ -81,14 +84,12 @@ export class PopupService {
 
   // Open product popup
   openProductPopup(product: Product) {
-    console.log('📦 Service: Opening product popup with:', product);
     this.productSubject.next(product);
     this.productVisibleSubject.next(true);
   }
 
   // Close product popup
   closeProductPopup() {
-    console.log('📦 Service: Closing product popup');
     this.productVisibleSubject.next(false);
     setTimeout(() => {
       this.productSubject.next(null);
@@ -97,14 +98,12 @@ export class PopupService {
 
   // Open review popup
   openReviewPopup(review: Review) {
-    console.log('📝 Service: Opening review popup with:', review);
     this.reviewSubject.next(review);
     this.reviewVisibleSubject.next(true);
   }
 
   // Close review popup
   closeReviewPopup() {
-    console.log('📝 Service: Closing review popup');
     this.reviewVisibleSubject.next(false);
     setTimeout(() => {
       this.reviewSubject.next(null);
