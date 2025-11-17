@@ -12,7 +12,7 @@
 
     <!-- Technologies Table -->
     <div class="table-container">
-        <table class="technologies-table" *ngIf="technologies.length > 0">
+        <table class="technologies-table" >
             <thead>
                 <tr>
                     <th>Technology Name</th>
@@ -20,7 +20,7 @@
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody *ngIf="technologies.length > 0">
                 <tr *ngFor="let technology of technologies" class="table-row">
                     <td class="technology-name">
                         {{ technology.technologyName }}

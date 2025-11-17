@@ -335,6 +335,17 @@
   box-shadow: 0 6px 16px rgba(24, 119, 242, 0.4);
 }
 
+
+.social-btn.xlink {
+  background: linear-gradient(135deg, #1877f2, #42a5f5);
+  box-shadow: 0 4px 12px rgba(24, 119, 242, 0.3);
+}
+
+.social-btn.xlink:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(24, 119, 242, 0.4);
+}
+
  
 
 /* ==================== RESPONSIVE DESIGN ==================== */

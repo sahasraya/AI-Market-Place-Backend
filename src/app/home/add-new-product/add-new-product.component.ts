@@ -85,6 +85,7 @@ export class AddNewProductComponent implements OnInit {
       productfb: [''],
       documentationlink: [''],
       productlinkedin: [''],
+      xlink: [''],
       isFeatured: [false], 
     });
   }
@@ -270,6 +271,7 @@ async createProduct(): Promise<void> {
   formData.append('documentationlink', this.productAddingForm.get('documentationlink')?.value || '');
   formData.append('productfb', this.productAddingForm.get('productfb')?.value || '');
   formData.append('productlinkedin', this.productAddingForm.get('productlinkedin')?.value || '');
+  formData.append('xlink', this.productAddingForm.get('xlink')?.value || '');
   formData.append('isFeatured', this.productAddingForm.get('isFeatured')?.value ? '1' : '0');
   formData.append('userid', this.userid);
   // 🔹 Arrays
