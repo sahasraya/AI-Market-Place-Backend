@@ -1764,8 +1764,6 @@ async def get_all_product_details_all(request: Request):
     
     
     
-    
-    
 @app.post("/get_all_product_details_all_admin")
 async def get_all_product_details_all_admin(request: Request):
     try:
@@ -1782,7 +1780,14 @@ async def get_all_product_details_all_admin(request: Request):
         offset = (page - 1) * limit
 
         async with pool.acquire() as conn:
-            async with conn.cursor(aiomysql.DictCursor) as cursor:  # ✅ DictCursor
+            async with conn.cursor(aiomysql.DictCursor) as cursor:
+                
+                # ✅ FIRST: Get total count of all products
+                await cursor.execute("SELECT COUNT(*) as total FROM product")
+                total_result = await cursor.fetchone()
+                total_count = total_result['total'] if total_result else 0
+                
+                # ✅ SECOND: Get paginated products
                 await cursor.execute("""
                     SELECT 
                         productid, userid, productname, productimage,
@@ -1798,14 +1803,22 @@ async def get_all_product_details_all_admin(request: Request):
                     LIMIT %s OFFSET %s
                 """, (limit, offset))
 
-                products = await cursor.fetchall()  # ✅ Now each row is a dict
+                products = await cursor.fetchall()
 
+                # If no products found on this page
                 if not products:
-                    return JSONResponse({"message": "No product found", "products": []})
+                    return JSONResponse({
+                        "message": "No product found", 
+                        "products": [],
+                        "total": total_count,
+                        "page": page,
+                        "limit": limit,
+                        "has_more": False
+                    })
 
                 # Loop through products and fetch related data
                 for prod in products:
-                    # ✅ Convert DATETIME using imported datetime class
+                    # ✅ Convert DATETIME
                     if isinstance(prod.get("createddate"), (datetime, date)):
                         prod["createddate"] = prod["createddate"].isoformat()
 
@@ -1824,8 +1837,6 @@ async def get_all_product_details_all_admin(request: Request):
                         prod["usecasenames"] = [row["name"] for row in await cursor.fetchall()]
                     else:
                         prod["usecasenames"] = []
-
-                    
 
                     # ✅ FOUNDERS
                     if prod.get("productfounderid"):
@@ -1857,7 +1868,7 @@ async def get_all_product_details_all_admin(request: Request):
                     else:
                         prod["deploymentnames"] = []
 
-                    # ✅ REPOSITORIES (fixed typo: name → link if storing URLs)
+                    # ✅ REPOSITORIES
                     if prod.get("productrepositoryid"):
                         await cursor.execute(
                             "SELECT name FROM repository WHERE productrepositoryid=%s",
@@ -1867,7 +1878,7 @@ async def get_all_product_details_all_admin(request: Request):
                     else:
                         prod["repositorylinks"] = []
 
-                    # ✅ MEDIA (fixed typo: medeia → media)
+                    # ✅ MEDIA
                     if prod.get("productmediaid"):
                         await cursor.execute(
                             "SELECT name FROM medeia WHERE productmediaid=%s",
@@ -1877,7 +1888,19 @@ async def get_all_product_details_all_admin(request: Request):
                     else:
                         prod["medialinks"] = []
 
-                return JSONResponse(content={"message": "yes", "products": products}, status_code=200)
+                # ✅ Calculate if there are more products to load
+                has_more = (offset + len(products)) < total_count
+
+                # ✅ Return response with total count and pagination info
+                return JSONResponse(content={
+                    "message": "yes", 
+                    "products": products,
+                    "total": total_count,
+                    "page": page,
+                    "limit": limit,
+                    "has_more": has_more,
+                    "loaded": offset + len(products)
+                }, status_code=200)
 
     except Exception as e:
         print(f"❌ Error fetching product details (ALL): {e}")
