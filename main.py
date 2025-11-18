@@ -3321,6 +3321,174 @@ async def update_review(payload: dict = Body(...)):
             status_code=500,
             detail="An error occurred while updating the review."
         )
+        
+        
+        
+        
+        
+        
+        
+        
+        
+@app.post("/delete_account")
+async def delete_account(request: Request):
+    try:
+        body = await request.json()
+        userid = body.get("userid")
+
+        if not userid:
+            return JSONResponse(
+                content={"message": "userid is required"},
+                status_code=400
+            )
+
+        async with pool.acquire() as conn:
+            async with conn.cursor(aiomysql.DictCursor) as cursor:
+                
+                # ✅ 1. Check if user exists
+                await cursor.execute(
+                    "SELECT userid, email FROM user WHERE userid = %s",
+                    (userid,)
+                )
+                user = await cursor.fetchone()
+                
+                if not user:
+                    return JSONResponse(
+                        content={"message": "User not found"},
+                        status_code=404
+                    )
+                
+                user_email = user['email']
+                
+                # ✅ 2. Get all product IDs belonging to this user
+                await cursor.execute(
+                    "SELECT productid FROM product WHERE userid = %s",
+                    (userid,)
+                )
+                user_products = await cursor.fetchall()
+                product_ids = [prod['productid'] for prod in user_products]
+                
+                # ✅ 3. Delete related data in order (to handle foreign key constraints)
+                
+                # Delete usecase entries for user's products
+                if product_ids:
+                    placeholders = ','.join(['%s'] * len(product_ids))
+                    await cursor.execute(
+                        f"DELETE FROM usecase WHERE productusecaseid IN ({placeholders})",
+                        product_ids
+                    )
+                    print(f"✅ Deleted usecases for {len(product_ids)} products")
+                
+                # Delete founder entries for user's products
+                if product_ids:
+                    placeholders = ','.join(['%s'] * len(product_ids))
+                    await cursor.execute(
+                        f"DELETE FROM founder WHERE productfounderid IN ({placeholders})",
+                        product_ids
+                    )
+                    print(f"✅ Deleted founders for {len(product_ids)} products")
+                
+                # Delete baseaimodel entries for user's products
+                if product_ids:
+                    placeholders = ','.join(['%s'] * len(product_ids))
+                    await cursor.execute(
+                        f"DELETE FROM baseaimodel WHERE productbaseaimodelid IN ({placeholders})",
+                        product_ids
+                    )
+                    print(f"✅ Deleted base AI models for {len(product_ids)} products")
+                
+                # Delete deployment entries for user's products
+                if product_ids:
+                    placeholders = ','.join(['%s'] * len(product_ids))
+                    await cursor.execute(
+                        f"DELETE FROM deployment WHERE productdeploymentid IN ({placeholders})",
+                        product_ids
+                    )
+                    print(f"✅ Deleted deployments for {len(product_ids)} products")
+                
+                # Delete repository entries for user's products
+                if product_ids:
+                    placeholders = ','.join(['%s'] * len(product_ids))
+                    await cursor.execute(
+                        f"DELETE FROM repository WHERE productrepositoryid IN ({placeholders})",
+                        product_ids
+                    )
+                    print(f"✅ Deleted repositories for {len(product_ids)} products")
+                
+                # Delete media entries for user's products
+                if product_ids:
+                    placeholders = ','.join(['%s'] * len(product_ids))
+                    await cursor.execute(
+                        f"DELETE FROM medeia WHERE productmediaid IN ({placeholders})",
+                        product_ids
+                    )
+                    print(f"✅ Deleted media for {len(product_ids)} products")
+                
+                # Delete reviews for user's products
+                if product_ids:
+                    placeholders = ','.join(['%s'] * len(product_ids))
+                    await cursor.execute(
+                        f"DELETE FROM review WHERE productid IN ({placeholders})",
+                        product_ids
+                    )
+                    print(f"✅ Deleted reviews for {len(product_ids)} products")
+                
+                # Delete reviews written by the user (on any product)
+                await cursor.execute(
+                    "DELETE FROM review WHERE userid = %s",
+                    (userid,)
+                )
+                print(f"✅ Deleted user's reviews")
+                
+                # Delete all products belonging to the user
+                await cursor.execute(
+                    "DELETE FROM product WHERE userid = %s",
+                    (userid,)
+                )
+                print(f"✅ Deleted {len(product_ids)} products")
+                
+                # Delete password reset entries for this user
+                await cursor.execute(
+                    "DELETE FROM reset WHERE email = %s",
+                    (user_email,)
+                )
+                print(f"✅ Deleted password reset entries")
+                
+                # ✅ 4. Finally, delete the user account
+                await cursor.execute(
+                    "DELETE FROM user WHERE userid = %s",
+                    (userid,)
+                )
+                print(f"✅ Deleted user account: {userid}")
+                
+                # Commit all changes
+                await conn.commit()
+                
+                return JSONResponse(
+                    content={
+                        "message": "Account deleted successfully",
+                        "deleted_products": len(product_ids),
+                        "userid": userid
+                    },
+                    status_code=200
+                )
+
+    except Exception as e:
+        print(f"❌ Error deleting account: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while deleting the account"
+        )
+        
+        
+        
+        
+        
+        
+        
+        
 
 @app.post("/check_existing_review")
 async def check_existing_review(payload: dict = Body(...)):
