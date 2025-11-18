@@ -1,0 +1,102 @@
+<div class="technology-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1 class="mainheading">
+            Technologies Management
+        </h1>
+        <button class="createnewbtn" (click)="openCreatePopup()">
+            <span class="material-icons">add</span>
+            Add Technology
+        </button>
+    </div>
+
+    <!-- Technologies Table -->
+    <div class="table-container">
+        <table class="technologies-table">
+            <thead>
+                <tr>
+                    <th>Technology Name</th>
+                    <th>Created Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody *ngIf="technologies.length > 0">
+                <tr *ngFor="let technology of technologies" class="table-row">
+                    <td class="technology-name">
+                        {{ technology.technologyName }}
+                    </td>
+                    <td>{{ technology.createdDate | date: 'MMM dd, yyyy' }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit" (click)="editTechnology(technology)" title="Edit">
+                                <span class="material-icons">edit</span>
+                            </button>
+                            <button class="action-btn delete" (click)="deleteTechnology(technology.techknologyid)"
+                                title="Delete">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div *ngIf="technologies.length === 0" class="no-data">
+            <span class="material-icons">engineering</span>
+            <p>No technologies found</p>
+        </div>
+    </div>
+
+    <!-- Create/Update Popup -->
+    <div class="overlay" *ngIf="showCreatePopup" (click)="closeCreatePopup()"></div>
+    <div class="popup" *ngIf="showCreatePopup">
+        <div class="popup-header">
+            <h2 class="popup-title">
+                <span class="material-icons">{{ isEditMode ? 'edit' : 'add_circle' }}</span>
+                {{ isEditMode ? 'Update Technology' : 'Create New Technology' }}
+            </h2>
+            <button class="close-btn" (click)="closeCreatePopup()" aria-label="Close popup">
+                <span class="material-icons" aria-hidden="true">close</span>
+            </button>
+        </div>
+
+        <div class="popup-body">
+            <form [formGroup]="technologyForm" (ngSubmit)="onSubmit()" class="technology-form">
+                <!-- Technology Name -->
+                <div class="form-group">
+                    <label for="technologyName">
+                        <span class="material-icons label-icon">engineering</span>
+                        Technology Name *
+                    </label>
+                    <input type="text" id="technologyName" formControlName="technologyName"
+                        placeholder="Enter technology name (e.g., Angular, React, Node.js)" class="form-control"
+                        [class.error]="technologyForm.get('technologyName')?.invalid && technologyForm.get('technologyName')?.touched"
+                        [class.success]="technologyForm.get('technologyName')?.valid && technologyForm.get('technologyName')?.touched">
+                    <div class="error-message"
+                        *ngIf="technologyForm.get('technologyName')?.invalid && technologyForm.get('technologyName')?.touched">
+                        <span class="material-icons">error</span>
+                        <span *ngIf="technologyForm.get('technologyName')?.errors?.['required']">Technology name is
+                            required</span>
+                        <span *ngIf="technologyForm.get('technologyName')?.errors?.['minlength']">Technology name must
+                            be at least 2 characters</span>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+
+                    <button type="submit" class="btn btn-primary" [disabled]="!isFormValid || isSubmitting">
+                        <span *ngIf="!isSubmitting" class="btn-content">
+                            <span class="material-icons">{{ isEditMode ? 'update' : 'add_circle' }}</span>
+                            {{ isEditMode ? 'Update Technology' : 'Create Technology' }}
+                        </span>
+                        <span *ngIf="isSubmitting" class="loading-text">
+                            <span class="spinner"></span>
+                            {{ isEditMode ? 'Updating...' : 'Creating...' }}
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
