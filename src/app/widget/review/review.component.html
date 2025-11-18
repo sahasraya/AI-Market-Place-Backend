@@ -1,0 +1,96 @@
+<div class="overlay" *ngIf="visible" (click)="onOverlayClick()"></div>
+
+<div class="popup review-popup" *ngIf="visible && review" (click)="$event.stopPropagation()">
+    <div class="popup-header">
+        <h2 class="popup-title">
+            <span class="material-icons">rate_review</span>
+            Review Details
+        </h2>
+        <button class="close-btn" (click)="closePopup()">
+            <span class="material-icons">close</span>
+        </button>
+    </div>
+
+    <div class="popup-body">
+
+        <!-- USER & DATE -->
+        <div class="detail-section">
+            <h3 class="detail-name">{{ review.username }}</h3>
+            <p class="review-date-large">
+                {{ review.createddate | date: 'MMMM dd, yyyy' }}
+            </p>
+        </div>
+
+        <!-- USAGE INFORMATION -->
+        <div class="detail-section">
+            <h4><span class="material-icons">info</span> Usage Information</h4>
+
+            <div class="info-grid">
+
+                <div class="info-item">
+                    <strong>Usage Type:</strong>
+                    <span class="badge">{{ review.commercialorpersonal }}</span>
+                </div>
+
+                <div class="info-item">
+                    <strong>Usage Duration:</strong>
+                    <span>{{ review.howlong }}</span>
+                </div>
+
+                <div class="info-item">
+                    <strong>Paid Version:</strong>
+                    <span class="badge" [class.success]="review.paidornot === 'yes'">
+                        {{ review.paidornot === 'yes' ? 'Yes' : 'No' }}
+                    </span>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RATINGS -->
+        <div class="detail-section">
+            <h4><span class="material-icons">star</span> Ratings</h4>
+
+            <div class="rating-detail">
+                <div class="rating-label-large">Overall Experience</div>
+                <div class="stars-large">
+                    <span *ngFor="let star of getStars(review.experiencerate)" class="material-icons">{{ star }}</span>
+                </div>
+                <div class="rating-score">{{ review.experiencerate }}/5</div>
+            </div>
+
+            <div class="rating-detail">
+                <div class="rating-label-large">Efficiency</div>
+                <div class="stars-large">
+                    <span *ngFor="let star of getStars(review.efficiencyrate)" class="material-icons">{{ star }}</span>
+                </div>
+                <div class="rating-score">{{ review.efficiencyrate }}/5</div>
+            </div>
+
+            <div class="rating-detail">
+                <div class="rating-label-large">Documentation Quality</div>
+                <div class="stars-large">
+                    <span *ngFor="let star of getStars(review.documentationrate)" class="material-icons">{{ star }}</span>
+                </div>
+                <div class="rating-score">{{ review.documentationrate }}/5</div>
+            </div>
+
+            <div class="rating-detail" *ngIf="review.paidornot === 'yes'">
+                <div class="rating-label-large">Paid Version Rating</div>
+                <div class="stars-large">
+                    <span *ngFor="let star of getStars(review.paidrate)" class="material-icons">{{ star }}</span>
+                </div>
+                <div class="rating-score">{{ review.paidrate }}/5</div>
+            </div>
+        </div>
+
+        <!-- COMMENTS -->
+        <div class="detail-section">
+            <h4><span class="material-icons">comment</span> Comments</h4>
+            <div class="comment-box">
+                <p>{{ review.comment }}</p>
+            </div>
+        </div>
+
+    </div>
+</div>
