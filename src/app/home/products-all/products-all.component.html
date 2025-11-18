@@ -91,7 +91,22 @@
       <span class="material-icons">inventory_2</span>
       <p>No products found</p>
     </div>
+
+
   </div>
+
+  <button class="load-more-btn" (click)="loadMoreProducts()" *ngIf="products.length < totalProducts">
+    <span class="material-icons">expand_more</span>
+    {{ loadMoreButtonText }}
+  </button>
+
+
+
+
+
+
+
+
 
   <!-- Product Popup -->
   <app-product *ngIf="selectedProduct" [product]="selectedProduct" [visible]="showProductPopup"

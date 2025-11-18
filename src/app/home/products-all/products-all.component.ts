@@ -66,6 +66,16 @@ export class ProductsAllComponent implements OnInit {
   isLoadingUsers = false;
 
 
+
+   // Pagination properties
+  currentPage = 1;
+  pageLimit = 10;
+  totalProducts = 0;
+  isLoadingProducts = false;
+  hasMoreProducts = false;
+
+
+
   constructor(
     private popupService: PopupService,
     private router: Router,
@@ -73,10 +83,125 @@ export class ProductsAllComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadProducts();
+    this.loadProducts(true);
   }
 
-  // ✅ Load all products
+// ✅ Load products with pagination
+async loadProducts(reset: boolean = false): Promise<void> {
+  if (this.isLoadingProducts) return;
+
+  if (reset) {
+    this.currentPage = 1;
+    this.products = [];
+    this.filteredProducts = [];
+  }
+
+  this.isLoadingProducts = true;
+  const body = { page: this.currentPage, limit: this.pageLimit };
+  
+  this.http.post<{ 
+    message: string; 
+    products: any[]; 
+    total: number;
+    page: number;
+    limit: number;
+    has_more: boolean;
+    loaded?: number;
+  }>(
+    `${this.APIURL}get_all_product_details_all_admin`,
+    body
+  ).subscribe({
+    next: (response) => {
+      console.log('📦 API Response:', response); // Debug log
+      
+      if (response.products && response.products.length > 0) {
+        const newProducts = response.products.map(p => ({
+          productid: p.productid,
+          userid: p.userid,
+          productname: p.productname,
+          productimage: p.productimage || '',
+          productcategory: p.productcategory || '',
+          productlicense: p.productlicense || '',
+          producttechnology: p.producttechnology || '',
+          productwebsite: p.productwebsite || '',
+          productfundingstage: p.productfundingstage || '',
+          productusecaseid: p.productusecaseid || '',
+          productfacebook: p.productfacebook || '',
+          productdocumentation: p.productdocumentation || '',
+          productlinkedin: p.productlinkedin || '',
+          productfounderid: p.productfounderid || '',
+          productdescription: p.productdescription || '',
+          productbaseaimodelid: p.productbaseaimodelid || '',
+          productdeploymentid: p.productdeploymentid || '',
+          productrepositoryid: p.productrepositoryid || '',
+          xlink: p.xlink || '',
+          productmediaid: p.productmediaid || '',
+          rating: p.rating || 0,
+          isFeatured: p.isFeatured || 0,
+          counts: p.counts || '0',
+          status: Number(p.status),
+          createddate: p.createddate,
+          usecasenames: p.usecasenames || [],
+          technologynames: p.technologynames || [],
+          foundernames: p.foundernames || [],
+          baseaimodelnames: p.baseaimodelnames || [],
+          deploymentnames: p.deploymentnames || [],
+          repositorylinks: p.repositorylinks || [],
+          medialinks: p.medialinks || []
+        } as Product));
+        
+        this.products = [...this.products, ...newProducts];
+        this.filteredProducts = [...this.products];
+        
+        // ✅ Set total count from API response
+        this.totalProducts = response.total || 0;
+        
+        // ✅ Use has_more from backend or calculate
+        this.hasMoreProducts = response.has_more !== undefined 
+          ? response.has_more 
+          : this.products.length < this.totalProducts;
+        
+        console.log(`✅ Loaded ${this.products.length} of ${this.totalProducts} products`);
+        console.log(`📊 Has more products: ${this.hasMoreProducts}`);
+        
+        // Load review counts for new products
+        this.loadReviewCounts();
+        
+        this.isLoadingProducts = false;
+      } else {
+        console.warn('⚠️ No products returned from API.');
+        
+        // ✅ Still set total from response even if no products on this page
+        this.totalProducts = response.total || 0;
+        this.hasMoreProducts = false;
+        this.isLoadingProducts = false;
+      }
+    },
+    error: (err) => {
+      console.error('❌ Failed to load products:', err);
+      alert('Failed to load products. Please try again.');
+      this.isLoadingProducts = false;
+      this.hasMoreProducts = false;
+    }
+  });
+}
+loadMoreProducts(): void {
+    if (!this.isLoadingProducts && this.hasMoreProducts) {
+      this.currentPage++;
+      this.loadProducts(false);
+    }
+  }
+
+  // ✅ Get loading text
+  get loadingText(): string {
+    return `Loading ${this.products.length} of ${this.totalProducts} products...`;
+  }
+
+  // ✅ Get load more button text
+  get loadMoreButtonText(): string {
+    return `Load More (${this.products.length} of ${this.totalProducts})`;
+  }
+
 
   // ✅ Load review counts for all products
 async  loadReviewCounts(): Promise<void> {
@@ -416,67 +541,9 @@ async  deleteProduct(product: Product):Promise<void> {
   }
 }
 
-   async loadProducts(): Promise<void> {
-    const body = { page: 1, limit: 100 };
-    
-    this.http.post<{ message: string; products: any[] }>(
-      `${this.APIURL}get_all_product_details_all_admin`,
-      body
-    ).subscribe({
-      next: (response) => {
+ 
 
-        if (response.products && response.products.length > 0) {
-          this.products = response.products.map(p => ({
-            productid: p.productid,
-            userid: p.userid,
-            productname: p.productname,
-            productimage: p.productimage || '',
-            productcategory: p.productcategory || '',
-            productlicense: p.productlicense || '',
-            producttechnology: p.producttechnology || '',
-            productwebsite: p.productwebsite || '',
-            productfundingstage: p.productfundingstage || '',
-            productusecaseid: p.productusecaseid || '',
-            productfacebook: p.productfacebook || '',
-            productdocumentation: p.productdocumentation || '',
-            productlinkedin: p.productlinkedin || '',
-            productfounderid: p.productfounderid || '',
-            productdescription: p.productdescription || '',
-            productbaseaimodelid: p.productbaseaimodelid || '',
-            productdeploymentid: p.productdeploymentid || '',
-            productrepositoryid: p.productrepositoryid || '',
-            xlink: p.xlink || '',
-            productmediaid: p.productmediaid || '',
-            rating: p.rating || 0,
-            isFeatured: p.isFeatured || 0,
-            counts: p.counts || '0',
-            status: Number(p.status),
-            createddate: p.createddate,
-            usecasenames: p.usecasenames || [],
-            technologynames: p.technologynames || [],
-            foundernames: p.foundernames || [],
-            baseaimodelnames: p.baseaimodelnames || [],
-            deploymentnames: p.deploymentnames || [],
-            repositorylinks: p.repositorylinks || [],
-            medialinks: p.medialinks || []
-          } as Product));
-          
-          this.filteredProducts = [...this.products];
-          
-         
-          this.loadReviewCounts();
-        } else {
-          console.warn('No products returned from API.');
-          this.filteredProducts = [];
-        }
-      },
-      error: (err) => {
-        console.error('Failed to load products:', err);
-        alert('Failed to load products. Please try again.');
-      }
-    });
-  }
-
+ 
 
  async toggleProductStatus(product: Product): Promise<void> {
 

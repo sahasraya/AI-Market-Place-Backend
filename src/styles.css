@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
-
+@import url("https://fonts.googleapis.com/icon?family=Material+Icons");
 
 *,
 *::before,
@@ -11,15 +10,13 @@
 
 /* Food & Health Management System Theme */
 :root {
- 
-
   /* Typography */
   --font-family: "Manrope", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 
   --background-color: #f8faf8;
-  --primary-color: #0071BC;
+  --primary-color: #0071bc;
   --primary-dark: #1b5e20;
-  --secondary-color: #0F9CFA;
+  --secondary-color: #0f9cfa;
   --accent-color: #ffb300;
   --highlight-color: #4caf50;
   --danger-color: #e53935;
@@ -49,7 +46,11 @@ body {
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    var(--secondary-color) 100%
+  );
   color: white;
   border: none;
   border-radius: 10px;
@@ -67,35 +68,34 @@ body {
   font-size: 20px;
 }
 
-
 .product-name {
   font-weight: 600;
   color: #424242;
- 
 }
 
 .product-name:hover {
   text-decoration: underline;
 }
 
-
-
-
-
 /* ......................................................... */
-.detail-image {
+.image-wrapper {
+  max-width: 150px;
   width: 100%;
   height: 80px;
-  object-fit: contain;
-  border-radius: 8px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 20px;
+  overflow: hidden;
+  margin: 0 auto 1rem;
+}
+.detail-image {
+  width: 100%;
+  display: block;
 }
 .popup-body {
   padding: 24px;
   overflow-y: auto;
   max-height: calc(85vh - 80px);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
 }
 
 .popup-body::-webkit-scrollbar {
@@ -114,4 +114,33 @@ body {
 .popup-body::-webkit-scrollbar-thumb:hover {
   background: #1565c0;
 }
+/* ....................................................... */
 
+.load-more-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background: linear-gradient(
+    135deg,
+    var(--primary-color, #1976d2),
+    var(--secondary-color, #2196f3)
+  );
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.load-more-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(25, 118, 210, 0.4);
+}
+
+.load-more-btn .material-icons {
+  font-size: 22px;
+}

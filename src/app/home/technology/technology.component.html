@@ -12,7 +12,7 @@
 
     <!-- Technologies Table -->
     <div class="table-container">
-        <table class="technologies-table" >
+        <table class="technologies-table">
             <thead>
                 <tr>
                     <th>Technology Name</th>
@@ -31,7 +31,8 @@
                             <button class="action-btn edit" (click)="editTechnology(technology)" title="Edit">
                                 <span class="material-icons">edit</span>
                             </button>
-                            <button class="action-btn delete" (click)="deleteTechnology(technology.techknologyid)" title="Delete">
+                            <button class="action-btn delete" (click)="deleteTechnology(technology.techknologyid)"
+                                title="Delete">
                                 <span class="material-icons">delete</span>
                             </button>
                         </div>
@@ -83,11 +84,7 @@
 
                 <!-- Form Actions -->
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" (click)="closeCreatePopup()"
-                        [disabled]="isSubmitting">
-                        <span class="material-icons">close</span>
-                        Cancel
-                    </button>
+
                     <button type="submit" class="btn btn-primary" [disabled]="!isFormValid || isSubmitting">
                         <span *ngIf="!isSubmitting" class="btn-content">
                             <span class="material-icons">{{ isEditMode ? 'update' : 'add_circle' }}</span>

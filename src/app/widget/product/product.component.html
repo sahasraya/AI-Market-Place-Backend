@@ -11,18 +11,18 @@
     </div>
 
     <div class="popup-body">
-        <img *ngIf="product.productimage" 
-                 [src]="'data:image/jpeg;base64,' + product.productimage" 
-                 [alt]="product.productname" 
-                 class="detail-image">
-                 
+        <div class="image-wrapper">
+            <img *ngIf="product.productimage" [src]="'data:image/jpeg;base64,' + product.productimage"
+                [alt]="product.productname" class="detail-image">
+        </div>
+
         <div class="product-detail">
             <!-- Product Image -->
-            
+
             <div *ngIf="!product.productimage" class="detail-image-placeholder">
                 <span class="material-icons">image</span>
             </div>
-            
+
             <!-- Product Name & Category -->
             <div class="detail-section">
                 <h3 class="detail-name">{{ product.productname }}</h3>
@@ -139,35 +139,29 @@
             </div>
 
             <!-- Social Links -->
-           <div class="social-section" >
-                <a *ngIf="product.productlinkedin && product.productlinkedin.trim() !== ''" 
-                [href]="product.productlinkedin" 
-                target="_blank" 
-                class="social-btn linkedin">
+            <div class="social-section">
+                <a *ngIf="product.productlinkedin && product.productlinkedin.trim() !== ''"
+                    [href]="product.productlinkedin" target="_blank" class="social-btn linkedin">
                     <span class="material-icons">business</span>
                     LinkedIn
                 </a>
-    
-                    <a *ngIf="product.productfacebook && product.productfacebook.trim() !== ''" 
-                    [href]="product.productfacebook" 
-                    target="_blank" 
-                    class="social-btn facebook">
-                        <span class="material-icons">facebook</span>
-                        Facebook
-                    </a>
+
+                <a *ngIf="product.productfacebook && product.productfacebook.trim() !== ''"
+                    [href]="product.productfacebook" target="_blank" class="social-btn facebook">
+                    <span class="material-icons">facebook</span>
+                    Facebook
+                </a>
 
 
-                     <a *ngIf="product.xlink && product.xlink.trim() !== ''" 
-                        [href]="product.xlink" 
-                        target="_blank" 
-                        class="social-btn xlink">
-                            X (Twitter)
-                        </a>
-                        
+                <a *ngIf="product.xlink && product.xlink.trim() !== ''" [href]="product.xlink" target="_blank"
+                    class="social-btn xlink">
+                    X (Twitter)
+                </a>
 
-                                        
-                                    
-                 </div>
+
+
+
+            </div>
 
             <!-- Created Date -->
             <div class="detail-section" *ngIf="product.createddate">

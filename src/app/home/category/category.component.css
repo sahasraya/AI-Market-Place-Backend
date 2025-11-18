@@ -264,7 +264,6 @@
   font-size: 22px;
 }
 
-
 /* ==================== FORM STYLES ==================== */
 .category-form {
   display: flex;
@@ -373,7 +372,6 @@
     var(--secondary-color, #ff6f00) 100%
   );
   color: white;
-  box-shadow: 0 4px 12px rgba(230, 81, 0, 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -430,7 +428,6 @@
     transform: rotate(360deg);
   }
 }
- 
 
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {

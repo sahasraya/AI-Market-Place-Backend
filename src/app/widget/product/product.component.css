@@ -107,9 +107,6 @@
 }
 
 /* ==================== PRODUCT IMAGE ==================== */
- 
-
- 
 
 /* ==================== DETAIL SECTIONS ==================== */
 .detail-section {
@@ -152,7 +149,11 @@
 .detail-category {
   display: inline-block;
   padding: 4px 12px;
-  background: linear-gradient(135deg, var(--primary-color, #1976d2), var(--secondary-color, #2196f3));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color, #1976d2),
+    var(--secondary-color, #2196f3)
+  );
   color: white;
   border-radius: 20px;
   font-size: 12px;
@@ -317,7 +318,6 @@
 
 .social-btn.linkedin {
   background: linear-gradient(135deg, #0077b5, #00a0dc);
-  box-shadow: 0 4px 12px rgba(0, 119, 181, 0.3);
 }
 
 .social-btn.linkedin:hover {
@@ -327,7 +327,6 @@
 
 .social-btn.facebook {
   background: linear-gradient(135deg, #1877f2, #42a5f5);
-  box-shadow: 0 4px 12px rgba(24, 119, 242, 0.3);
 }
 
 .social-btn.facebook:hover {
@@ -335,18 +334,14 @@
   box-shadow: 0 6px 16px rgba(24, 119, 242, 0.4);
 }
 
-
 .social-btn.xlink {
   background: linear-gradient(135deg, #1877f2, #42a5f5);
-  box-shadow: 0 4px 12px rgba(24, 119, 242, 0.3);
 }
 
 .social-btn.xlink:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(24, 119, 242, 0.4);
 }
-
- 
 
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {
@@ -365,10 +360,6 @@
 
   .popup-body {
     padding: 16px 20px;
-  }
-
-  .detail-image {
-    max-height: 180px;
   }
 
   .detail-grid {
@@ -460,7 +451,8 @@
 
 /* ==================== ANIMATIONS ==================== */
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
