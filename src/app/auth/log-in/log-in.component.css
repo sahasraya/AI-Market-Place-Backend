@@ -188,7 +188,6 @@
 .login-button:hover:not(:disabled) {
   background-color: #255d28;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
 }
 
 .login-button:active:not(:disabled) {
@@ -241,11 +240,11 @@
   .login-card {
     padding: 32px 24px;
   }
-  
+
   .login-header h1 {
     font-size: 24px;
   }
-  
+
   .logo {
     max-width: 100px;
   }

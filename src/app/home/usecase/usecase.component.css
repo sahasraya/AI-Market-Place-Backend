@@ -264,8 +264,6 @@
   font-size: 22px;
 }
 
-
-
 /* ==================== FORM STYLES ==================== */
 .store-form {
   display: flex;
@@ -374,7 +372,6 @@
     var(--secondary-color, #2196f3) 100%
   );
   color: white;
-  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -431,7 +428,6 @@
     transform: rotate(360deg);
   }
 }
- 
 
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {

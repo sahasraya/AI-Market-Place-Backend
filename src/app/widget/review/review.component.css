@@ -94,7 +94,6 @@
   font-size: 22px;
 }
 
-
 /* ==================== REVIEW DETAILS ==================== */
 .review-detail {
   display: flex;
@@ -111,7 +110,6 @@
 }
 
 .detail-section:hover {
-  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
   transform: translateX(2px);
 }
 
@@ -186,7 +184,11 @@
   border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
-  background: linear-gradient(135deg, var(--primary-color, #1976d2), var(--secondary-color, #2196f3));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color, #1976d2),
+    var(--secondary-color, #2196f3)
+  );
   color: white;
   text-transform: capitalize;
 }
@@ -271,7 +273,6 @@
 }
 
 /* ==================== SCROLLBAR ==================== */
-
 
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {

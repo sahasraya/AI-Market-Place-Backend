@@ -103,7 +103,6 @@
   height: 250px;
   object-fit: cover;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .image-upload-overlay {
@@ -175,14 +174,17 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: linear-gradient(135deg, var(--primary-color, #1976d2), var(--secondary-color, #2196f3));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color, #1976d2),
+    var(--secondary-color, #2196f3)
+  );
   color: white;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
 }
 
 .file-upload-label:hover {
@@ -237,7 +239,7 @@
 }
 
 .checkbox-input:checked + .checkbox-custom::after {
-  content: '✓';
+  content: "✓";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -328,7 +330,11 @@
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  background: linear-gradient(135deg, var(--primary-color, #1976d2), var(--secondary-color, #2196f3));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color, #1976d2),
+    var(--secondary-color, #2196f3)
+  );
   color: white;
   border-radius: 20px;
   font-size: 13px;
@@ -367,7 +373,6 @@
   border: 2px solid var(--primary-color, #1976d2);
   border-top: none;
   border-radius: 0 0 8px 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 10;
 }
 
@@ -503,9 +508,12 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary-color, #1976d2), var(--secondary-color, #2196f3));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color, #1976d2),
+    var(--secondary-color, #2196f3)
+  );
   color: white;
-  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {

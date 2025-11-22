@@ -12,7 +12,7 @@
 
     <!-- Categories Table -->
     <div class="table-container">
-        <table class="categories-table" >
+        <table class="categories-table">
             <thead>
                 <tr>
                     <th>Category Name</th>
@@ -31,7 +31,8 @@
                             <button class="action-btn edit" (click)="editCategory(category)" title="Edit">
                                 <span class="material-icons">edit</span>
                             </button>
-                            <button class="action-btn delete" (click)="deleteCategory(category.categoryid)" title="Delete">
+                            <button class="action-btn delete" (click)="deleteCategory(category.categoryid)"
+                                title="Delete">
                                 <span class="material-icons">delete</span>
                             </button>
                         </div>
@@ -83,11 +84,7 @@
 
                 <!-- Form Actions -->
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" (click)="closeCreatePopup()"
-                        [disabled]="isSubmitting">
-                        <span class="material-icons">close</span>
-                        Cancel
-                    </button>
+
                     <button type="submit" class="btn btn-primary" [disabled]="!isFormValid || isSubmitting">
                         <span *ngIf="!isSubmitting" class="btn-content">
                             <span class="material-icons">{{ isEditMode ? 'update' : 'add_circle' }}</span>

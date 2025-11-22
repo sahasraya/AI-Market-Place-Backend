@@ -513,7 +513,6 @@
   font-family: var(--font-family);
   cursor: pointer;
   transition: var(--transition-smooth);
-  box-shadow: 0 4px 12px rgba(229, 57, 53, 0.3);
   position: relative;
   overflow: hidden;
   /* Minimum touch target size for mobile */

@@ -264,7 +264,6 @@
   font-size: 22px;
 }
 
-
 /* ==================== FORM STYLES ==================== */
 .technology-form {
   display: flex;
@@ -373,12 +372,10 @@
     var(--secondary-color, #8e24aa) 100%
   );
   color: white;
-  box-shadow: 0 4px 12px rgba(106, 27, 154, 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(106, 27, 154, 0.4);
 }
 
 .btn-primary:disabled {
@@ -430,7 +427,7 @@
     transform: rotate(360deg);
   }
 }
- 
+
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {
   .technology-container {

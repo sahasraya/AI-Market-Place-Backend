@@ -85,11 +85,7 @@
 
                 <!-- Form Actions -->
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" (click)="closeCreatePopup()"
-                        [disabled]="isSubmitting">
-                        <span class="material-icons">close</span>
-                        Cancel
-                    </button>
+
                     <button type="submit" class="btn btn-primary" [disabled]="!isFormValid || isSubmitting">
                         <span *ngIf="!isSubmitting" class="btn-content">
                             <span class="material-icons">{{ isEditMode ? 'update' : 'add_circle' }}</span>

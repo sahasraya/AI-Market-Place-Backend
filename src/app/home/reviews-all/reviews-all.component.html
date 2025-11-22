@@ -4,7 +4,7 @@
     <h1 class="mainheading">
       All Reviews
     </h1>
-   
+
   </div>
 
   <!-- Search Section -->
@@ -42,7 +42,7 @@
       </thead>
       <tbody>
         <tr *ngFor="let review of displayedReviews" class="table-row">
-         
+
 
           <td class="clickable user-cell" (click)="openUser(review.userid)">
             <div class="user-info">
@@ -56,7 +56,7 @@
             <span class="product-name">See Product</span>
           </td>
 
-           
+
 
           <td>
             <div class="duration-cell" *ngIf="review.howlong">
@@ -125,25 +125,18 @@
   </div>
 
   <!-- Load More Button -->
-  <div class="load-more-section" *ngIf="hasMoreReviews()">
-    <button class="load-more-btn" (click)="loadMore()">
-      <span class="material-icons">expand_more</span>
-      Load More ({{ displayedReviews.length }} of {{ filteredReviews.length }})
-    </button>
-  </div>
+  <button class="load-more-btn" (click)="loadMore()">
+    <span class="material-icons">expand_more</span>
+    Load More ({{ displayedReviews.length }} of {{ filteredReviews.length }})
+  </button>
 
   <!-- Review Popup -->
-  <app-review *ngIf="selectedReview" 
-              [review]="selectedReview" 
-              [visible]="showReviewPopup" 
-              (close)="closeReviewPopup()">
+  <app-review *ngIf="selectedReview" [review]="selectedReview" [visible]="showReviewPopup" (close)="closeReviewPopup()">
   </app-review>
 
   <!-- Product Popup -->
-  <app-product *ngIf="selectedProduct" 
-               [product]="selectedProduct" 
-               [visible]="showProductPopup"
-               (close)="closeProductPopup()">
+  <app-product *ngIf="selectedProduct" [product]="selectedProduct" [visible]="showProductPopup"
+    (close)="closeProductPopup()">
   </app-product>
 
   <!-- User Popup -->
@@ -159,7 +152,7 @@
       </button>
     </div>
     <div class="popup-content">
-       
+
       <div class="user-detail-item">
         <span class="material-icons">person</span>
         <div class="detail-info">

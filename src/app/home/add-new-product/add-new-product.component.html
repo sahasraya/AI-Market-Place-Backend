@@ -123,7 +123,7 @@
         <input type="url" formControlName="website" placeholder="https://example.com" class="form-control" />
       </div>
 
-     
+
 
 
       <!-- Funding Stage -->
@@ -176,7 +176,7 @@
           class="form-control" />
       </div>
 
-       <div class="form-group">
+      <div class="form-group">
         <label>
           <span class="material-icons label-icon">link</span>
           Xlink
@@ -342,10 +342,7 @@
 
       <!-- Form Actions -->
       <div class="form-actions">
-        <button type="button" class="btn btn-secondary" (click)="goBack()">
-          <span class="material-icons">close</span>
-          Cancel
-        </button>
+
         <button type="submit" class="btn btn-primary" [disabled]="productAddingForm.invalid || isSubmitting">
           <span *ngIf="!isSubmitting" class="btn-content">
             <span class="material-icons">{{ isEditMode ? 'update' : 'check_circle' }}</span>
