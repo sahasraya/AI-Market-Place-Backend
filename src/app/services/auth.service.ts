@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, BehaviorSubject } from 'rxjs';
+import { environment } from '../environments/environment';
 
 interface LoginResponse {
   message: string;
@@ -22,7 +23,9 @@ interface LoginResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private APIURL = 'http://localhost:8000/'; // Your API URL
+
+  
+  private APIURL = environment.APIURL;
   private currentUserSubject = new BehaviorSubject<any>(null);
   public currentUser = this.currentUserSubject.asObservable();
 
