@@ -2526,7 +2526,7 @@ async def get_product_details(request: Request):
                            productlicense, producttechnology, productwebsite, productfundingstage,
                            productfacebook, productlinkedin,productdocumentation,
                            productusecaseid, productfounderid, productbaseaimodelid, productdeploymentid, productmediaid,productrepositoryid,
-                           rating, productdescription, userid, counts,xlink
+                           rating, productdescription, userid, counts,xlink,isFeatured
                     FROM product
                     WHERE productid = %s
                 """, (productid,))
@@ -2594,9 +2594,6 @@ async def get_product_details(request: Request):
 
 
 
-
-
-
 @app.post("/update_product_details")
 async def update_product_details(request: Request):
     try:
@@ -2617,13 +2614,17 @@ async def update_product_details(request: Request):
         productdescription = data.get("productdescription", "")
         productfacebook = data.get("productfacebook", "")
         productlinkedin = data.get("productlinkedin", "")
+        xlink = data.get("xlink", "")
+        productdocumentation = data.get("productdocumentation", "")
         productimage = data.get("productimage")  # Base64 encoded image
+        isFeatured = data.get("isFeatured", 0)  # ✅ Get isFeatured value (1 or 0)
         
         # Extract array data
         founders = data.get("founders", [])
         baseModels = data.get("baseModels", [])
         deployments = data.get("deployments", [])
         mediaPreviews = data.get("mediaPreviews", [])
+        repositories = data.get("repositories", [])
         useCases = data.get("useCases", [])
 
         async with pool.acquire() as conn:
@@ -2641,7 +2642,7 @@ async def update_product_details(request: Request):
                 # Get existing related IDs
                 await cursor.execute("""
                     SELECT productusecaseid, productfounderid, productbaseaimodelid, 
-                           productdeploymentid, productmediaid
+                           productdeploymentid, productmediaid, productrepositoryid
                     FROM product WHERE productid = %s
                 """, (productid,))
                 existing_ids = await cursor.fetchone()
@@ -2690,6 +2691,10 @@ async def update_product_details(request: Request):
                     "medeia", mediaPreviews, existing_ids.get("productmediaid"), "productmediaid"
                 ) if mediaPreviews else existing_ids.get("productmediaid")
 
+                new_repository_id = await update_related_table(
+                    "repository", repositories, existing_ids.get("productrepositoryid"), "productrepositoryid"
+                ) if repositories else existing_ids.get("productrepositoryid")
+
                 # Handle image update
                 image_data = None
                 if productimage:
@@ -2706,15 +2711,17 @@ async def update_product_details(request: Request):
                             productname = %s, productcategory = %s, productlicense = %s,
                             producttechnology = %s, productwebsite = %s, productfundingstage = %s,
                             productdescription = %s, productfacebook = %s, productlinkedin = %s,
+                            xlink = %s, productdocumentation = %s, isFeatured = %s,
                             productimage = %s, productusecaseid = %s, productfounderid = %s,
-                            productbaseaimodelid = %s, productdeploymentid = %s, productmediaid = %s
+                            productbaseaimodelid = %s, productdeploymentid = %s, productmediaid = %s,
+                            productrepositoryid = %s
                         WHERE productid = %s AND userid = %s
                     """, (
                         productname, productcategory, productlicense, producttechnology,
                         productwebsite, productfundingstage, productdescription,
-                        productfacebook, productlinkedin, image_data,
-                        new_usecase_id, new_founder_id, new_basemodel_id,
-                        new_deployment_id, new_media_id, productid, userid
+                        productfacebook, productlinkedin, xlink, productdocumentation, isFeatured,
+                        image_data, new_usecase_id, new_founder_id, new_basemodel_id,
+                        new_deployment_id, new_media_id, new_repository_id, productid, userid
                     ))
                 else:
                     # Update without changing image
@@ -2723,15 +2730,17 @@ async def update_product_details(request: Request):
                             productname = %s, productcategory = %s, productlicense = %s,
                             producttechnology = %s, productwebsite = %s, productfundingstage = %s,
                             productdescription = %s, productfacebook = %s, productlinkedin = %s,
+                            xlink = %s, productdocumentation = %s, isFeatured = %s,
                             productusecaseid = %s, productfounderid = %s,
-                            productbaseaimodelid = %s, productdeploymentid = %s, productmediaid = %s
+                            productbaseaimodelid = %s, productdeploymentid = %s, productmediaid = %s,
+                            productrepositoryid = %s
                         WHERE productid = %s AND userid = %s
                     """, (
                         productname, productcategory, productlicense, producttechnology,
                         productwebsite, productfundingstage, productdescription,
-                        productfacebook, productlinkedin,
+                        productfacebook, productlinkedin, xlink, productdocumentation, isFeatured,
                         new_usecase_id, new_founder_id, new_basemodel_id,
-                        new_deployment_id, new_media_id, productid, userid
+                        new_deployment_id, new_media_id, new_repository_id, productid, userid
                     ))
 
                 # Check if update was successful
