@@ -247,6 +247,9 @@ async  loadReviewCounts(): Promise<void> {
     this.searchText = '';
     this.onSearch();
   }
+editProduct(product: any): void {
+  this.router.navigate(['/home/update-product', product.productid, product.userid]);
+}
 
   addProduct() {
     this.router.navigate(['/home/add-new-product']);

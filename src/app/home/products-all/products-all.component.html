@@ -67,19 +67,28 @@
           </td>
           <td>
             <div class="action-buttons">
+              <!-- 1. Edit Button (Purple) -->
+              <button class="action-btn edit" (click)="editProduct(product)" title="Edit Product">
+                <span class="material-icons">edit</span>
+              </button>
+
+              <!-- 2. Assign Button (Blue) -->
               <button class="action-btn assign" (click)="openAssignPopup(product)" title="Assign to User">
                 <span class="material-icons">person_add</span>
               </button>
 
-              <button class="action-btn delete" (click)="deleteProduct(product)" title="Delete">
-                <span class="material-icons">delete</span>
-              </button>
+              <!-- 3. Status Toggle Button (Green/Orange) -->
               <button class="action-btn" [class.deactivate]="product.status === 0"
                 [class.activate]="product.status === 1" (click)="toggleProductStatus(product)"
-                [title]="product.status === 0 ? 'Deactivate' : 'Activate'">
+                [title]="product.status === 0 ? 'Activate Product' : 'Deactivate Product'">
                 <span class="material-icons">
-                  {{ product.status === 0? 'block' : 'check_circle' }}
+                  {{ product.status === 0 ? 'check_circle' : 'block' }}
                 </span>
+              </button>
+
+              <!-- 4. Delete Button (Red) -->
+              <button class="action-btn delete" (click)="deleteProduct(product)" title="Delete">
+                <span class="material-icons">delete</span>
               </button>
             </div>
           </td>

@@ -82,6 +82,12 @@ export const routes: Routes = [
         component: AddNewProductComponent,
       },
 
+
+      {
+        path: 'update-product/:productid/:userid',
+        component: AddNewProductComponent,
+      }
+
  
    
     ]

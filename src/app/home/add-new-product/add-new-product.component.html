@@ -76,13 +76,7 @@
         </label>
         <select formControlName="type" class="form-select">
           <option value="" disabled>Select a Category</option>
-          <option value="AI model">AI Model</option>
-          <option value="Agent">Agent</option>
-          <option value="Voice">Voice</option>
-          <option value="Image">Image</option>
-          <option value="Video Editing">Video Editing</option>
-          <option value="Dev Tools">Dev Tools</option>
-          <option value="Utility">Utility</option>
+          <option *ngFor="let c of categories" [value]="c.categoryName">{{ c.categoryName }}</option>
         </select>
       </div>
 
@@ -108,9 +102,7 @@
         </label>
         <select formControlName="technology" class="form-select">
           <option value="" disabled>Select Technology</option>
-          <option value="SaaS">SaaS</option>
-          <option value="PaaS">PaaS</option>
-          <option value="IaaS">IaaS</option>
+          <option *ngFor="let t of technologies" [value]="t.technologyName">{{ t.technologyName }}</option>
         </select>
       </div>
 
@@ -122,9 +114,6 @@
         </label>
         <input type="url" formControlName="website" placeholder="https://example.com" class="form-control" />
       </div>
-
-
-
 
       <!-- Funding Stage -->
       <div class="form-group">
@@ -176,13 +165,6 @@
           class="form-control" />
       </div>
 
-      <div class="form-group">
-        <label>
-          <span class="material-icons label-icon">link</span>
-          Xlink
-        </label>
-        <input type="url" formControlName="xlink" placeholder="https://xlink.com" class="form-control" />
-      </div>
 
 
       <!-- Social Links Section -->
@@ -192,6 +174,8 @@
       </div>
 
       <!-- Facebook Link -->
+
+
       <div class="form-group">
         <label>
           <span class="material-icons label-icon">facebook</span>
@@ -209,6 +193,14 @@
         </label>
         <input type="url" formControlName="productlinkedin" placeholder="https://linkedin.com/company/yourproduct"
           class="form-control" />
+      </div>
+
+      <div class="form-group">
+        <label>
+          <span class="material-icons label-icon">link</span>
+          X Link
+        </label>
+        <input type="url" formControlName="xlink" placeholder="https://x.com/yourproduct" class="form-control" />
       </div>
 
       <!-- Dynamic Fields Section -->
@@ -269,8 +261,13 @@
         </label>
         <div class="dynamic-fields-container">
           <div *ngFor="let deploy of deployments.controls; let i = index" class="dynamic-field">
-            <input type="text" [formControlName]="i" placeholder="e.g., Cloud, On-Premise, Hybrid"
-              class="form-control" />
+            <select [formControlName]="i" class="form-select deployment-select">
+              <option value="" disabled>Select deployment type</option>
+              <option value="SaaS">SaaS</option>
+              <option value="On-Prem">On-Prem</option>
+              <option value="Cloud">Cloud</option>
+              <option value="Hybrid">Hybrid</option>
+            </select>
             <div class="field-actions">
               <button type="button" class="btn-icon add" (click)="addField(deployments)" title="Add deployment">
                 <span class="material-icons">add</span>
@@ -342,7 +339,6 @@
 
       <!-- Form Actions -->
       <div class="form-actions">
-
         <button type="submit" class="btn btn-primary" [disabled]="productAddingForm.invalid || isSubmitting">
           <span *ngIf="!isSubmitting" class="btn-content">
             <span class="material-icons">{{ isEditMode ? 'update' : 'check_circle' }}</span>
