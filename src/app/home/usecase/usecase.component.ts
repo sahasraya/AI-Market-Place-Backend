@@ -142,6 +142,12 @@ export class UsecaseComponent implements OnInit {
       this.http.post(this.APIURL + 'create_usecase', formData).subscribe({
         next: (response: any) => {
           this.isSubmitting = false;
+
+          if (response.message === "Use case name already exists") {
+              alert("Use case name already exists. Try another name.");
+              return;
+            }
+
           if (response.message === "Use case created successfully") {
             this.closeCreatePopup();
             this.loadUsecases();

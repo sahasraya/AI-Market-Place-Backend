@@ -1,4 +1,7 @@
 /* ==================== PRODUCTS CONTAINER ==================== */
+.clickproductname{
+  cursor: pointer;
+}
 .products-container {
   padding: 32px;
   background-color: var(--background-color, #f5f5f5);

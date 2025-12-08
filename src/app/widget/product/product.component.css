@@ -149,12 +149,8 @@
 .detail-category {
   display: inline-block;
   padding: 4px 12px;
-  background: linear-gradient(
-    135deg,
-    var(--primary-color, #1976d2),
-    var(--secondary-color, #2196f3)
-  );
-  color: white;
+  
+  color: black;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;

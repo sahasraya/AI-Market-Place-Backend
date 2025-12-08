@@ -48,7 +48,7 @@
               </span>
             </div>
           </td>
-          <td class="product-name clickable" (click)="openProduct(product)">
+          <td class="product-name clickable" >
             {{ product.productname }}
           </td>
           <td>
@@ -68,6 +68,11 @@
           <td>
             <div class="action-buttons">
               <!-- 1. Edit Button (Purple) -->
+
+                  <button class="action-btn preview"  (click)="openProduct(product)" title="Preview Product">
+                  <span class="material-icons">visibility</span>
+                </button>
+
               <button class="action-btn edit" (click)="editProduct(product)" title="Edit Product">
                 <span class="material-icons">edit</span>
               </button>

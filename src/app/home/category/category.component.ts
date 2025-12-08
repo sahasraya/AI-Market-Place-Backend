@@ -143,6 +143,12 @@ export class CategoryComponent implements OnInit {
       this.http.post(this.APIURL + 'create_category', formData).subscribe({
         next: (response: any) => {
           this.isSubmitting = false;
+
+              if (response.message === "Category name already exists") {
+      alert("Category name already exists. Try another name.");
+      return;
+    }
+    
           if (response.message === "Category created successfully") {
             this.closeCreatePopup();
             this.loadCategories();

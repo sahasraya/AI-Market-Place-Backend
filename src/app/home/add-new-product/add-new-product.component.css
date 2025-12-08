@@ -100,8 +100,8 @@
 
 .product-preview-image {
   width: 100%;
-  height: 250px;
-  object-fit: cover;
+  height: 150px;
+  object-fit: contain;
   border-radius: 12px;
 }
 

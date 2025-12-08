@@ -143,6 +143,12 @@ export class TechnologyComponent implements OnInit {
       this.http.post(this.APIURL + 'create_technology', formData).subscribe({
         next: (response: any) => {
           this.isSubmitting = false;
+
+          if (response.message === "Technology name already exists") {
+            alert("Technology name already exists. Try another name.");
+            return;
+          }
+
           if (response.message === "Technology created successfully") {
             this.closeCreatePopup();
             this.loadTechnologies();
