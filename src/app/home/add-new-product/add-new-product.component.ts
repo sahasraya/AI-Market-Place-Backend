@@ -1,10 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
- 
 
 @Component({
   selector: 'app-add-new-product',
@@ -29,6 +28,12 @@ export class AddNewProductComponent implements OnInit {
   filteredUseCases: string[] = [];
   usecases: any[] = [];
 
+  // ✅ Technologies Multi-Select
+  selectedTechnologies: string[] = [];
+  technologyInput: string = '';
+  filteredTechnologies: string[] = [];
+  showTechnologyDropdown: boolean = false;
+
   // Dropdowns
   categories: any[] = [];
   technologies: any[] = [];
@@ -43,7 +48,6 @@ export class AddNewProductComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private http: HttpClient,
- 
   ) {}
 
   ngOnInit(): void {
@@ -59,7 +63,6 @@ export class AddNewProductComponent implements OnInit {
       name: ['', Validators.required],
       type: ['', Validators.required],
       license: ['', Validators.required],
-      technology: ['', Validators.required],
       website: ['', Validators.required],
       fundingStage: ['', Validators.required],
       productdescription: ['', Validators.required],
@@ -129,6 +132,85 @@ export class AddNewProductComponent implements OnInit {
     });
   }
 
+  // ✅ Technology Input Handler
+  onTechnologyInput(event: any): void {
+    event.stopPropagation();
+    const value = event.target.value.toLowerCase();
+    this.technologyInput = event.target.value;
+
+    if (value) {
+      this.filteredTechnologies = this.technologies
+        .filter(t =>
+          t.technologyName.toLowerCase().includes(value) &&
+          !this.selectedTechnologies.includes(t.technologyName)
+        )
+        .map(t => t.technologyName);
+    } else {
+      this.filteredTechnologies = this.technologies
+        .filter(t => !this.selectedTechnologies.includes(t.technologyName))
+        .map(t => t.technologyName);
+    }
+    
+    this.showTechnologyDropdown = this.filteredTechnologies.length > 0;
+  }
+
+  // ✅ Technology Input Focus
+  onTechnologyInputFocus(): void {
+    this.filteredTechnologies = this.technologies
+      .filter(t => !this.selectedTechnologies.includes(t.technologyName))
+      .map(t => t.technologyName);
+    
+    this.showTechnologyDropdown = this.filteredTechnologies.length > 0;
+  }
+
+  // ✅ Select Technology
+  selectTechnology(technology: string): void {
+    if (!this.selectedTechnologies.includes(technology)) {
+      this.selectedTechnologies.push(technology);
+      this.technologyInput = '';
+      
+      this.filteredTechnologies = this.technologies
+        .filter(t => !this.selectedTechnologies.includes(t.technologyName))
+        .map(t => t.technologyName);
+      
+      this.showTechnologyDropdown = this.filteredTechnologies.length > 0;
+      
+      setTimeout(() => {
+        const input = document.querySelector('.technology-input') as HTMLInputElement;
+        if (input) {
+          input.focus();
+        }
+      }, 0);
+    }
+  }
+
+  // ✅ Remove Technology
+  removeTechnology(technology: string): void {
+    this.selectedTechnologies = this.selectedTechnologies.filter(t => t !== technology);
+    
+    this.filteredTechnologies = this.technologies
+      .filter(t => !this.selectedTechnologies.includes(t.technologyName))
+      .map(t => t.technologyName);
+  }
+
+  // ✅ Click Outside Handler
+  @HostListener('document:click', ['$event'])
+  clickOutside(event: Event) {
+    const target = event.target as HTMLElement;
+    
+    const isTechnologyElement = 
+      target.closest('.technology-selector') !== null ||
+      target.closest('.technology-dropdown') !== null ||
+      target.classList.contains('technology-input') ||
+      target.classList.contains('technology-dropdown-item') ||
+      target.classList.contains('tech-chip') ||
+      target.classList.contains('chip-remove');
+    
+    if (!isTechnologyElement) {
+      this.showTechnologyDropdown = false;
+    }
+  }
+
   checkEditMode(): void {
     this.route.params.subscribe(params => {
       const productId = params['productid'];
@@ -157,11 +239,19 @@ export class AddNewProductComponent implements OnInit {
   populateProductForm(response: any): void {
     const prod = response.product;
 
+    // ✅ Parse technologies from comma-separated string
+    const technologiesString = prod.producttechnology || '';
+    this.selectedTechnologies = technologiesString
+      .split(',')
+      .map((t: string) => t.trim())
+      .filter((t: string) => t.length > 0);
+
+    console.log('✅ Admin-side loaded technologies for edit:', this.selectedTechnologies);
+
     this.productAddingForm.patchValue({
       name: prod.productname || '',
       type: prod.productcategory || '',
       license: prod.productlicense || '',
-      technology: prod.producttechnology || '',
       website: prod.productwebsite || '',
       fundingStage: prod.productfundingstage || '',
       productdescription: prod.productdescription || '',
@@ -174,6 +264,7 @@ export class AddNewProductComponent implements OnInit {
 
     if (prod.productimage) {
       this.selectedImage = `data:image/png;base64,${prod.productimage}`;
+      this.selectedFileName = 'Current product image';
     }
 
     this.populateFormArray('founders', response.founders || []);
@@ -291,6 +382,12 @@ export class AddNewProductComponent implements OnInit {
 
   // Form Submission
   onSubmitProduct(): void {
+    // ✅ Validate that at least one technology is selected
+    if (this.selectedTechnologies.length === 0) {
+      alert('⚠️ Please select at least one technology');
+      return;
+    }
+
     if (this.productAddingForm.valid) {
       this.isSubmitting = true;
       
@@ -313,18 +410,23 @@ export class AddNewProductComponent implements OnInit {
     const formData = new FormData();
 
     // Basic fields
-    formData.append('name', this.productAddingForm.get('name')?.value);
-    formData.append('type', this.productAddingForm.get('type')?.value);
-    formData.append('license', this.productAddingForm.get('license')?.value);
-    formData.append('technology', this.productAddingForm.get('technology')?.value);
-    formData.append('website', this.productAddingForm.get('website')?.value);
-    formData.append('fundingStage', this.productAddingForm.get('fundingStage')?.value);
-    formData.append('productdescription', this.productAddingForm.get('productdescription')?.value);
+    formData.append('name', this.productAddingForm.get('name')?.value || '');
+    formData.append('type', this.productAddingForm.get('type')?.value || '');
+    formData.append('license', this.productAddingForm.get('license')?.value || '');
+    
+    // ✅ Join technologies with comma
+    formData.append('technology', this.selectedTechnologies.join(','));
+    console.log('✅ Admin-side creating product with technologies:', this.selectedTechnologies.join(','));
+    
+    formData.append('website', this.productAddingForm.get('website')?.value || '');
+    formData.append('fundingStage', this.productAddingForm.get('fundingStage')?.value || '');
+    formData.append('productdescription', this.productAddingForm.get('productdescription')?.value || '');
     formData.append('productdocumentation', this.productAddingForm.get('documentationlink')?.value || '');
     formData.append('xlink', this.productAddingForm.get('xlink')?.value || '');
-    formData.append('userid', this.userid ?? '');
+    formData.append('userid', this.userid || '');
     formData.append('productfb', this.productAddingForm.get('productfb')?.value || '');
     formData.append('productlinkedin', this.productAddingForm.get('productlinkedin')?.value || '');
+    formData.append('isFeatured', this.productAddingForm.get('isFeatured')?.value ? '1' : '0');
 
     // Arrays
     const founders = this.productAddingForm.get('founders')?.value || [];
@@ -353,6 +455,8 @@ export class AddNewProductComponent implements OnInit {
     const validRepositories = repositories.filter((r: string) => r && r.trim() !== '');
     validRepositories.forEach((r: string, i: number) => formData.append(`repositories[${i}]`, r));
 
+    console.log('✅ Admin-side creating with repositories:', validRepositories);
+
     // Product image
     if (this.selectedProductFile) {
       formData.append('productImage', this.selectedProductFile);
@@ -366,13 +470,22 @@ export class AddNewProductComponent implements OnInit {
           alert('✅ Product created successfully!');
           this.router.navigate(['/home/products-all']);
         } else {
-          alert('❌ Failed to create product');
+          console.error('❌ Creation failed:', response);
+          alert('❌ Failed to create product: ' + (response.message || 'Unknown error'));
         }
       },
       error: (err) => {
         this.isSubmitting = false;
         console.error('❌ Error creating product:', err);
-        alert('Error creating product');
+        
+        let errorMessage = 'Error creating product';
+        if (err.error && err.error.detail) {
+          errorMessage += ': ' + err.error.detail;
+        } else if (err.message) {
+          errorMessage += ': ' + err.message;
+        }
+        
+        alert(errorMessage);
       }
     });
   }
@@ -384,16 +497,27 @@ export class AddNewProductComponent implements OnInit {
       d && d.trim() !== '' && validDeploymentOptions.includes(d)
     );
 
+    // ✅ Filter valid repositories
+    const repositoriesArray = this.productAddingForm.get('repositories')?.value || [];
+    const validRepositories = repositoriesArray.filter((r: string) => r && r.trim() !== '');
+
+    // ✅ Filter valid media previews
+    const mediaPreviewsArray = this.productAddingForm.get('mediaPreviews')?.value || [];
+    const validMediaPreviews = mediaPreviewsArray.filter((m: string) => m && m.trim() !== '');
+
     const payload: any = {
       productid: this.updatingProductId,
       userid: this.userid,
-      productname: this.productAddingForm.get('name')?.value,
-      productcategory: this.productAddingForm.get('type')?.value,
-      productlicense: this.productAddingForm.get('license')?.value,
-      producttechnology: this.productAddingForm.get('technology')?.value,
-      productwebsite: this.productAddingForm.get('website')?.value,
-      productfundingstage: this.productAddingForm.get('fundingStage')?.value,
-      productdescription: this.productAddingForm.get('productdescription')?.value,
+      productname: this.productAddingForm.get('name')?.value || '',
+      productcategory: this.productAddingForm.get('type')?.value || '',
+      productlicense: this.productAddingForm.get('license')?.value || '',
+      
+      // ✅ Join technologies with comma
+      producttechnology: this.selectedTechnologies.join(','),
+      
+      productwebsite: this.productAddingForm.get('website')?.value || '',
+      productfundingstage: this.productAddingForm.get('fundingStage')?.value || '',
+      productdescription: this.productAddingForm.get('productdescription')?.value || '',
       productdocumentation: this.productAddingForm.get('documentationlink')?.value || '',
       productfacebook: this.productAddingForm.get('productfb')?.value || '',
       productlinkedin: this.productAddingForm.get('productlinkedin')?.value || '',
@@ -402,11 +526,12 @@ export class AddNewProductComponent implements OnInit {
       founders: this.productAddingForm.get('founders')?.value.filter((f: string) => f && f.trim() !== ''),
       baseModels: this.productAddingForm.get('baseModels')?.value.filter((b: string) => b && b.trim() !== ''),
       deployments: validDeployments,
-      mediaPreviews: this.productAddingForm.get('mediaPreviews')?.value.filter((m: string) => m && m.trim() !== ''),
-      repositories: this.productAddingForm.get('repositories')?.value.filter((r: string) => r && r.trim() !== ''),
+      mediaPreviews: validMediaPreviews,
+      repositories: validRepositories,
       useCases: this.selectedUseCases
     };
 
+   
 
     // Handle image if selected
     if (this.selectedProductFile) {
@@ -424,21 +549,34 @@ export class AddNewProductComponent implements OnInit {
     }
   }
 
- async sendUpdateRequest(payload: any): Promise<void> {
+  async sendUpdateRequest(payload: any): Promise<void> {
+    console.log('📤 Admin-side sending update request with payload:', payload);
+    
     this.http.post(this.APIURL + 'update_product_details', payload).subscribe({
       next: (response: any) => {
+        console.log('✅ Admin-side update response:', response);
         this.isSubmitting = false;
+        
         if (response.message === 'success') {
           alert('✅ Product updated successfully!');
           this.router.navigate(['/home/products-all']);
         } else {
-          alert('❌ Failed to update product');
+          console.error('❌ Admin-side update failed:', response);
+          alert('❌ Failed to update product: ' + (response.message || 'Unknown error'));
         }
       },
       error: err => {
+        console.error('❌ Admin-side error updating product:', err);
         this.isSubmitting = false;
-        console.error('Error updating product:', err);
-        alert('Error updating product');
+        
+        let errorMessage = 'Error updating product';
+        if (err.error && err.error.detail) {
+          errorMessage += ': ' + err.error.detail;
+        } else if (err.message) {
+          errorMessage += ': ' + err.message;
+        }
+        
+        alert(errorMessage);
       }
     });
   }
